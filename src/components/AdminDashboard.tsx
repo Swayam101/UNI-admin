@@ -20,31 +20,33 @@ import {
   IconMail,
   IconMenu2,
   IconDashboard,
-  IconSettings,
   IconLogout,
-  IconUser,
   IconMoon,
   IconSun,
   IconChevronDown,
 } from '@tabler/icons-react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../App';
+import { useLogout, useCurrentUser } from '../hooks/useAuth';
 import Dashboard from './Dashboard';
 import SchoolManagement from './SchoolManagement';
 import UserManagement from './UserManagement';
 import PostManagement from './PostManagement';
 import Analytics from './Analytics';
 import EmailCampaigns from './EmailCampaigns';
+import CollegeFormPage from './CollegeFormPage';
 
 const AdminDashboard = () => {
   const [opened, setOpened] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { colorScheme, toggleColorScheme } = useTheme();
+  const logoutMutation = useLogout();
+  const { data: user } = useCurrentUser();
 
   const navigationItems = [
     { icon: IconDashboard, label: 'Dashboard', path: '/' },
-    { icon: IconSchool, label: 'School Management', path: '/schools' },
+    { icon: IconSchool, label: 'College Management', path: '/schools' },
     { icon: IconUsers, label: 'User Management', path: '/users' },
     { icon: IconMessages, label: 'Post Management', path: '/posts' },
     { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
@@ -54,6 +56,31 @@ const AdminDashboard = () => {
   const getCurrentPageTitle = () => {
     const currentItem = navigationItems.find(item => item.path === location.pathname);
     return currentItem?.label || 'Dashboard';
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Navigate to login even if logout API fails (tokens are cleared in the hook)
+      navigate('/login');
+    }
+  };
+
+  // Generate user initials from name
+  const getUserInitials = () => {
+    if (!user) return 'AD';
+    const firstName = user.firstName || '';
+    const lastName = user.lastName || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+  };
+
+  // Get full user name
+  const getUserName = () => {
+    if (!user) return 'Admin User';
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
   };
 
   return (
@@ -81,13 +108,14 @@ const AdminDashboard = () => {
               <Avatar
                 size={36}
                 radius="xl"
+                src={user?.profilePicture}
                 gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
               >
-                A
+                {!user?.profilePicture && getUserInitials()}
               </Avatar>
               <div>
                 <Title order={3} c="blue" style={{ fontSize: rem(18), fontWeight: 600 }}>
-                  Admin Panel
+                  INCOMING-CLASS Admin
                 </Title>
                 <Text size="xs" c="dimmed" style={{ marginTop: rem(-2) }}>
                   {getCurrentPageTitle()}
@@ -98,7 +126,7 @@ const AdminDashboard = () => {
             {/* Mobile only - simplified title */}
             <Group hiddenFrom="sm">
               <Title order={4} c="blue" style={{ fontSize: rem(16), fontWeight: 600 }}>
-                Admin
+                INCOMING-CLASS
               </Title>
             </Group>
           </Group>
@@ -117,17 +145,22 @@ const AdminDashboard = () => {
                   }}
                 >
                   <Group gap="sm">
-                    <Avatar size={32} radius="xl" color="blue">
-                      AD
+                    <Avatar 
+                      size={32} 
+                      radius="xl" 
+                      src={user?.profilePicture}
+                      color="blue"
+                    >
+                      {!user?.profilePicture && getUserInitials()}
                     </Avatar>
                     {/* Hide user info on mobile */}
                     <Group style={{ flex: 1, minWidth: 0 }} visibleFrom="md">
                       <div>
                         <Text size="sm" fw={500} style={{ lineHeight: 1 }}>
-                          Admin User
+                          {getUserName()}
                         </Text>
                         <Text size="xs" c="dimmed" style={{ lineHeight: 1 }}>
-                          admin@university.edu
+                          {user?.email || 'Loading...'}
                         </Text>
                       </div>
                       <IconChevronDown 
@@ -141,12 +174,6 @@ const AdminDashboard = () => {
 
               <Menu.Dropdown>
                 <Menu.Label>Account</Menu.Label>
-                <Menu.Item leftSection={<IconUser size={16} />}>
-                  Profile Settings
-                </Menu.Item>
-                <Menu.Item leftSection={<IconSettings size={16} />}>
-                  Preferences
-                </Menu.Item>
                 
                 <Menu.Divider />
                 
@@ -163,6 +190,7 @@ const AdminDashboard = () => {
                 <Menu.Item 
                   leftSection={<IconLogout size={16} />}
                   color="red"
+                  onClick={handleLogout}
                 >
                   Logout
                 </Menu.Item>
@@ -201,7 +229,7 @@ const AdminDashboard = () => {
 
         <div style={{ marginTop: 'auto', paddingTop: rem(16), borderTop: '1px solid var(--mantine-color-default-border)' }}>
           <Text size="xs" c="dimmed" ta="center">
-            University Admin v1.0
+            INCOMING-CLASS Admin v1.0
           </Text>
         </div>
       </AppShell.Navbar>
@@ -215,6 +243,8 @@ const AdminDashboard = () => {
             <Route path="/posts" element={<PostManagement />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/emails" element={<EmailCampaigns />} />
+            <Route path="/schools/add" element={<CollegeFormPage />} />
+            <Route path="/schools/edit/:id" element={<CollegeFormPage />} />
           </Routes>
         </Container>
       </AppShell.Main>

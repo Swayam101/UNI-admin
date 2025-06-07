@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Title,
   Card,
@@ -8,12 +9,12 @@ import {
   Badge,
   Stack,
   TextInput,
-  Modal,
-  Select,
-  Switch,
   ActionIcon,
   Text,
   Avatar,
+  Skeleton,
+  Alert,
+  Switch,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -21,151 +22,172 @@ import {
   IconEdit,
   IconBrandInstagram,
   IconSearch,
+  IconAlertCircle,
 } from '@tabler/icons-react';
-import { useDisclosure } from '@mantine/hooks';
-
-interface School {
-  id: string;
-  name: string;
-  location: string;
-  status: 'active' | 'inactive';
-  instagramConnected: boolean;
-  instagramHandle: string;
-  students: number;
-  postsCount: number;
-  lastActivity: string;
-}
+import { useColleges, useDeleteCollege } from '../hooks/useCollege';
+import type { College } from '../types/college';
 
 const SchoolManagement = () => {
-  const [opened, { open, close }] = useDisclosure(false);
-  const [editingSchool, setEditingSchool] = useState<School | null>(null);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [schools, setSchools] = useState<School[]>([
-    {
-      id: '1',
-      name: 'Harvard University',
-      location: 'Cambridge, MA',
-      status: 'active',
-      instagramConnected: true,
-      instagramHandle: '@harvard',
-      students: 245,
-      postsCount: 89,
-      lastActivity: '2 hours ago',
-    },
-    {
-      id: '2',
-      name: 'Stanford University',
-      location: 'Stanford, CA',
-      status: 'active',
-      instagramConnected: true,
-      instagramHandle: '@stanford',
-      students: 198,
-      postsCount: 76,
-      lastActivity: '4 hours ago',
-    },
-    {
-      id: '3',
-      name: 'MIT',
-      location: 'Cambridge, MA',
-      status: 'active',
-      instagramConnected: false,
-      instagramHandle: '',
-      students: 187,
-      postsCount: 64,
-      lastActivity: '1 day ago',
-    },
-    {
-      id: '4',
-      name: 'Yale University',
-      location: 'New Haven, CT',
-      status: 'inactive',
-      instagramConnected: false,
-      instagramHandle: '',
-      students: 156,
-      postsCount: 52,
-      lastActivity: '3 days ago',
-    },
-  ]);
+  // API hooks
+  const { data: colleges = [], isLoading, error, refetch } = useColleges();
+  const deleteMutation = useDeleteCollege();
 
-  const handleAddSchool = () => {
-    setEditingSchool({
-      id: '',
-      name: '',
-      location: '',
-      status: 'active',
-      instagramConnected: false,
-      instagramHandle: '',
-      students: 0,
-      postsCount: 0,
-      lastActivity: 'Just added',
-    });
-    open();
-  };
-
-  const handleEditSchool = (school: School) => {
-    setEditingSchool(school);
-    open();
-  };
-
-  const handleDeleteSchool = (id: string) => {
-    setSchools(schools.filter(school => school.id !== id));
-  };
-
-  const toggleInstagramConnection = (id: string) => {
-    setSchools(schools.map(school => 
-      school.id === id 
-        ? { ...school, instagramConnected: !school.instagramConnected }
-        : school
-    ));
-  };
-
-  const filteredSchools = schools.filter(school =>
-    school.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    school.location.toLowerCase().includes(searchQuery.toLowerCase())
+  // Skeleton Components
+  const TableSkeleton = () => (
+    <Table verticalSpacing="sm">
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>College</Table.Th>
+          <Table.Th>Location</Table.Th>
+          <Table.Th>Contact</Table.Th>
+          <Table.Th>Established</Table.Th>
+          <Table.Th>Instagram</Table.Th>
+          <Table.Th>Actions</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Table.Tr key={index}>
+            <Table.Td>
+              <Group gap="sm">
+                <Skeleton height={40} width={40} circle />
+                <div>
+                  <Skeleton height={16} width={140} mb={4} />
+                  <Skeleton height={12} width={120} />
+                </div>
+              </Group>
+            </Table.Td>
+            <Table.Td>
+              <div>
+                <Skeleton height={14} width={100} mb={2} />
+                <Skeleton height={12} width={80} />
+              </div>
+            </Table.Td>
+            <Table.Td>
+              <div>
+                <Skeleton height={14} width={150} mb={2} />
+                <Skeleton height={12} width={120} />
+              </div>
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={14} width={60} />
+            </Table.Td>
+            <Table.Td>
+              <Group gap="xs">
+                <Skeleton height={16} width={16} circle />
+                <Skeleton height={20} width={80} radius="sm" />
+              </Group>
+            </Table.Td>
+            <Table.Td>
+              <Group gap="xs">
+                <Skeleton height={28} width={28} circle />
+                <Skeleton height={28} width={28} circle />
+              </Group>
+            </Table.Td>
+          </Table.Tr>
+        ))}
+      </Table.Tbody>
+    </Table>
   );
 
-  const rows = filteredSchools.map((school) => (
-    <Table.Tr key={school.id}>
+  const handleAddCollege = () => {
+    navigate('/schools/add');
+  };
+
+  const handleEditCollege = (college: College) => {
+    navigate(`/schools/edit/${college._id}`);
+  };
+
+  const handleDeleteCollege = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this college?')) {
+      try {
+        await deleteMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Error deleting college:', error);
+      }
+    }
+  };
+
+  const filteredColleges = colleges.filter(college =>
+    college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    college.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    college.country.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getFullLocation = (college: College) => {
+    const parts = [college.city, college.state, college.country].filter(Boolean);
+    return parts.join(', ');
+  };
+
+  const hasInstagramIntegration = (college: College) => {
+    return !!(college.instagramBusinessId && college.instagramAccessToken);
+  };
+
+  const rows = filteredColleges.map((college) => (
+    <Table.Tr key={college._id}>
       <Table.Td>
         <Group gap="sm">
-          <Avatar size={40} radius="xl" color="blue">
-            {school.name.charAt(0)}
+          <Avatar 
+            size={40} 
+            radius="xl" 
+            src={college.logoUrl}
+            color="blue"
+          >
+            {!college.logoUrl && getInitials(college.name)}
           </Avatar>
           <div>
-            <Text fw={500}>{school.name}</Text>
-            <Text size="sm" c="dimmed">{school.location}</Text>
+            <Text fw={500}>{college.name}</Text>
+            <Text size="sm" c="dimmed" lineClamp={1}>{college.description}</Text>
           </div>
         </Group>
       </Table.Td>
       <Table.Td>
-        <Badge color={school.status === 'active' ? 'green' : 'gray'} variant="light">
-          {school.status}
-        </Badge>
+        <div>
+          <Text size="sm">{getFullLocation(college)}</Text>
+          <Text size="xs" c="dimmed">{college.postalCode}</Text>
+        </div>
+      </Table.Td>
+      <Table.Td>
+        <div>
+          <Text size="sm">{college.email}</Text>
+          <Text size="xs" c="dimmed">{college.phoneNumber}</Text>
+        </div>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{college.establishedYear || 'N/A'}</Text>
       </Table.Td>
       <Table.Td>
         <Group gap="xs">
           <Switch
-            checked={school.instagramConnected}
-            onChange={() => toggleInstagramConnection(school.id)}
+            checked={hasInstagramIntegration(college)}
+            readOnly
             size="sm"
           />
-          {school.instagramConnected && (
+          {hasInstagramIntegration(college) && (
             <Badge leftSection={<IconBrandInstagram size={12} />} color="pink" variant="light">
-              {school.instagramHandle}
+              Connected
             </Badge>
           )}
         </Group>
       </Table.Td>
-      <Table.Td>{school.students}</Table.Td>
-      <Table.Td>{school.postsCount}</Table.Td>
-      <Table.Td>{school.lastActivity}</Table.Td>
       <Table.Td>
         <Group gap="xs">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleEditSchool(school)}>
+          <ActionIcon variant="subtle" color="blue" onClick={() => handleEditCollege(college)}>
             <IconEdit size={16} />
           </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDeleteSchool(school.id)}>
+          <ActionIcon 
+            variant="subtle" 
+            color="red" 
+            onClick={() => handleDeleteCollege(college._id!)}
+            loading={deleteMutation.isPending}
+          >
             <IconTrash size={16} />
           </ActionIcon>
         </Group>
@@ -176,81 +198,79 @@ const SchoolManagement = () => {
   return (
     <Stack gap="lg">
       <Group justify="space-between">
-        <Title order={1}>School Management</Title>
-        <Button leftSection={<IconPlus size={16} />} onClick={handleAddSchool}>
-          Add School
-        </Button>
+        {isLoading ? (
+          <>
+            <Skeleton height={32} width={220} />
+            <Skeleton height={36} width={120} />
+          </>
+        ) : (
+          <>
+            <Title order={1}>College Management</Title>
+            <Button leftSection={<IconPlus size={16} />} onClick={handleAddCollege}>
+              Add College
+            </Button>
+          </>
+        )}
       </Group>
+
+      {error && (
+        <Alert icon={<IconAlertCircle size={16} />} color="red">
+          Error loading colleges: {error.message}
+          <Button variant="outline" size="xs" ml="md" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </Alert>
+      )}
 
       <Card padding="lg" radius="md" withBorder>
         <Group justify="space-between" mb="md">
-          <Text fw={500}>Schools ({schools.length})</Text>
-          <TextInput
-            placeholder="Search schools..."
-            leftSection={<IconSearch size={16} />}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.currentTarget.value)}
-            style={{ width: 300 }}
-          />
+          {isLoading ? (
+            <>
+              <Skeleton height={16} width={120} />
+              <Skeleton height={36} width={300} />
+            </>
+          ) : (
+            <>
+              <Text fw={500}>Colleges ({colleges.length})</Text>
+              <TextInput
+                placeholder="Search colleges..."
+                leftSection={<IconSearch size={16} />}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.currentTarget.value)}
+                style={{ width: 300 }}
+              />
+            </>
+          )}
         </Group>
 
         <Table.ScrollContainer minWidth={800}>
-          <Table verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>School</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Instagram</Table.Th>
-                <Table.Th>Students</Table.Th>
-                <Table.Th>Posts</Table.Th>
-                <Table.Th>Last Activity</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>{rows}</Table.Tbody>
-          </Table>
+          {isLoading ? <TableSkeleton /> : (
+            <Table verticalSpacing="sm">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>College</Table.Th>
+                  <Table.Th>Location</Table.Th>
+                  <Table.Th>Contact</Table.Th>
+                  <Table.Th>Established</Table.Th>
+                  <Table.Th>Instagram</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {rows.length > 0 ? rows : (
+                  <Table.Tr>
+                    <Table.Td colSpan={6}>
+                      <Text ta="center" py="xl" c="dimmed">
+                        {searchQuery ? 'No colleges found matching your search.' : 'No colleges found. Add your first college!'}
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+          )}
         </Table.ScrollContainer>
       </Card>
-
-      <Modal opened={opened} onClose={close} title={editingSchool?.id ? 'Edit School' : 'Add New School'} size="md">
-        <Stack gap="md">
-          <TextInput
-            label="School Name"
-            placeholder="Enter school name"
-            value={editingSchool?.name || ''}
-            onChange={(event) => setEditingSchool(prev => prev ? {...prev, name: event.currentTarget.value} : null)}
-          />
-          <TextInput
-            label="Location"
-            placeholder="Enter location"
-            value={editingSchool?.location || ''}
-            onChange={(event) => setEditingSchool(prev => prev ? {...prev, location: event.currentTarget.value} : null)}
-          />
-          <Select
-            label="Status"
-            data={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
-            ]}
-            value={editingSchool?.status || 'active'}
-            onChange={(value) => setEditingSchool(prev => prev ? {...prev, status: value as 'active' | 'inactive'} : null)}
-          />
-          <TextInput
-            label="Instagram Handle"
-            placeholder="@schoolname"
-            value={editingSchool?.instagramHandle || ''}
-            onChange={(event) => setEditingSchool(prev => prev ? {...prev, instagramHandle: event.currentTarget.value} : null)}
-          />
-          <Group justify="flex-end">
-            <Button variant="outline" onClick={close}>
-              Cancel
-            </Button>
-            <Button onClick={close}>
-              {editingSchool?.id ? 'Update' : 'Add'} School
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
     </Stack>
   );
 };

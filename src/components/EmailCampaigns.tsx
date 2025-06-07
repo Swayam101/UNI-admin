@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Title,
   Card,
@@ -14,6 +14,7 @@ import {
   ActionIcon,
   Modal,
   Grid,
+  Skeleton,
 } from '@mantine/core';
 import {
   IconMail,
@@ -39,6 +40,69 @@ interface EmailCampaign {
 const EmailCampaigns = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Simulate loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Skeleton Components
+  const TableSkeleton = () => (
+    <Table verticalSpacing="sm">
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>Campaign</Table.Th>
+          <Table.Th>Recipients</Table.Th>
+          <Table.Th>Status</Table.Th>
+          <Table.Th>Sent</Table.Th>
+          <Table.Th>Open Rate</Table.Th>
+          <Table.Th>Click Rate</Table.Th>
+          <Table.Th>Created</Table.Th>
+          <Table.Th>Actions</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Table.Tr key={index}>
+            <Table.Td>
+              <div>
+                <Skeleton height={16} width="85%" mb={4} />
+                <Skeleton height={12} width="70%" />
+              </div>
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={14} width={100} />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={20} width={60} radius="sm" />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={14} width={60} />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={14} width={40} />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={14} width={40} />
+            </Table.Td>
+            <Table.Td>
+              <Skeleton height={14} width={80} />
+            </Table.Td>
+            <Table.Td>
+              <Group gap="xs">
+                <Skeleton height={28} width={28} circle />
+                <Skeleton height={28} width={28} circle />
+              </Group>
+            </Table.Td>
+          </Table.Tr>
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
 
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([
     {
@@ -91,7 +155,7 @@ const EmailCampaigns = () => {
   const recipientGroups = [
     { value: 'all', label: 'All Users', count: 1832 },
     { value: 'students', label: 'Students Only', count: 1456 },
-    { value: 'schools', label: 'School Admins', count: 24 },
+    { value: 'schools', label: 'College Admins', count: 24 },
     { value: 'paid', label: 'Paid Users', count: 567 },
     { value: 'free', label: 'Free Users', count: 1265 },
   ];
@@ -212,61 +276,112 @@ const EmailCampaigns = () => {
   return (
     <Stack gap="lg">
       <Group justify="space-between">
-        <Title order={1}>Email Campaigns</Title>
-        <Button leftSection={<IconMail size={16} />} onClick={handleCreateCampaign}>
-          Create Campaign
-        </Button>
+        {loading ? (
+          <>
+            <Skeleton height={32} width={200} />
+            <Skeleton height={36} width={140} />
+          </>
+        ) : (
+          <>
+            <Title order={1}>Email Campaigns</Title>
+            <Button leftSection={<IconMail size={16} />} onClick={handleCreateCampaign}>
+              Create Campaign
+            </Button>
+          </>
+        )}
       </Group>
 
       {/* Campaign Stats */}
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Card padding="lg" radius="md" withBorder>
-            <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Total Sent</Text>
-            <Text fw={700} size="xl">{totalSent.toLocaleString()}</Text>
+            {loading ? (
+              <>
+                <Skeleton height={12} width="60%" mb="xs" />
+                <Skeleton height={28} width="50%" />
+              </>
+            ) : (
+              <>
+                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Total Sent</Text>
+                <Text fw={700} size="xl">{totalSent.toLocaleString()}</Text>
+              </>
+            )}
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Card padding="lg" radius="md" withBorder>
-            <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Campaigns</Text>
-            <Text fw={700} size="xl">{campaigns.length}</Text>
+            {loading ? (
+              <>
+                <Skeleton height={12} width="60%" mb="xs" />
+                <Skeleton height={28} width="40%" />
+              </>
+            ) : (
+              <>
+                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Campaigns</Text>
+                <Text fw={700} size="xl">{campaigns.length}</Text>
+              </>
+            )}
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Card padding="lg" radius="md" withBorder>
-            <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Avg Open Rate</Text>
-            <Text fw={700} size="xl">{avgOpenRate.toFixed(1)}%</Text>
+            {loading ? (
+              <>
+                <Skeleton height={12} width="70%" mb="xs" />
+                <Skeleton height={28} width="50%" />
+              </>
+            ) : (
+              <>
+                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Avg Open Rate</Text>
+                <Text fw={700} size="xl">{avgOpenRate.toFixed(1)}%</Text>
+              </>
+            )}
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
           <Card padding="lg" radius="md" withBorder>
-            <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Avg Click Rate</Text>
-            <Text fw={700} size="xl">{avgClickRate.toFixed(1)}%</Text>
+            {loading ? (
+              <>
+                <Skeleton height={12} width="70%" mb="xs" />
+                <Skeleton height={28} width="50%" />
+              </>
+            ) : (
+              <>
+                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Avg Click Rate</Text>
+                <Text fw={700} size="xl">{avgClickRate.toFixed(1)}%</Text>
+              </>
+            )}
           </Card>
         </Grid.Col>
       </Grid>
 
       <Card padding="lg" radius="md" withBorder>
         <Group justify="space-between" mb="md">
-          <Text fw={500}>Campaign History</Text>
+          {loading ? (
+            <Skeleton height={16} width={140} />
+          ) : (
+            <Text fw={500}>Campaign History</Text>
+          )}
         </Group>
 
         <Table.ScrollContainer minWidth={1000}>
-          <Table verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Campaign</Table.Th>
-                <Table.Th>Recipients</Table.Th>
-                <Table.Th>Status</Table.Th>
-                <Table.Th>Sent</Table.Th>
-                <Table.Th>Open Rate</Table.Th>
-                <Table.Th>Click Rate</Table.Th>
-                <Table.Th>Created</Table.Th>
-                <Table.Th>Actions</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>{rows}</Table.Tbody>
-          </Table>
+          {loading ? <TableSkeleton /> : (
+            <Table verticalSpacing="sm">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Campaign</Table.Th>
+                  <Table.Th>Recipients</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th>Sent</Table.Th>
+                  <Table.Th>Open Rate</Table.Th>
+                  <Table.Th>Click Rate</Table.Th>
+                  <Table.Th>Created</Table.Th>
+                  <Table.Th>Actions</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>{rows}</Table.Tbody>
+            </Table>
+          )}
         </Table.ScrollContainer>
       </Card>
 
