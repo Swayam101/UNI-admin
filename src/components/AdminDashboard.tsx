@@ -24,6 +24,7 @@ import {
   IconMoon,
   IconSun,
   IconChevronDown,
+  IconCreditCard,
 } from '@tabler/icons-react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../App';
@@ -34,6 +35,7 @@ import UserManagement from './UserManagement';
 import PostManagement from './PostManagement';
 import Analytics from './Analytics';
 import EmailCampaigns from './EmailCampaigns';
+import PaymentManagement from './PaymentManagement';
 import CollegeFormPage from './CollegeFormPage';
 
 const AdminDashboard = () => {
@@ -51,6 +53,7 @@ const AdminDashboard = () => {
     { icon: IconMessages, label: 'Post Management', path: '/posts' },
     { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
     { icon: IconMail, label: 'Email Campaigns', path: '/emails' },
+    { icon: IconCreditCard, label: 'Payment Management', path: '/payments' },
   ];
 
   const getCurrentPageTitle = () => {
@@ -243,6 +246,7 @@ const AdminDashboard = () => {
             <Route path="/posts" element={<PostManagement />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/emails" element={<EmailCampaigns />} />
+            <Route path="/payments" element={<PaymentManagement />} />
             <Route path="/schools/add" element={<CollegeFormPage />} />
             <Route path="/schools/edit/:id" element={<CollegeFormPage />} />
           </Routes>
