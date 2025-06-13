@@ -2,6 +2,30 @@ import { QueryClient } from '@tanstack/react-query';
 import { notifications } from '@mantine/notifications';
 import { ApiError } from '../types/auth';
 
+// Helper function to safely convert error to ApiError
+const toApiError = (error: unknown): ApiError => {
+  // If it's already an ApiError, return it
+  if (error && typeof error === 'object' && 'success' in error && 'message' in error) {
+    return error as ApiError;
+  }
+  
+  // If it's a generic Error, convert it
+  if (error instanceof Error) {
+    return {
+      success: false,
+      message: error.message,
+      code: '500', // Default to server error
+    };
+  }
+  
+  // Fallback for unknown error types
+  return {
+    success: false,
+    message: 'An unexpected error occurred',
+    code: '500',
+  };
+};
+
 // Create and configure the query client
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,7 +37,7 @@ export const queryClient = new QueryClient({
       // Retry failed requests up to 3 times
       retry: (failureCount, error) => {
         // Don't retry on client errors (4xx)
-        const apiError = error as ApiError;
+        const apiError = toApiError(error);
         if (apiError.code && apiError.code.startsWith('4')) {
           return false;
         }
@@ -27,7 +51,7 @@ export const queryClient = new QueryClient({
     mutations: {
       // Global error handler for mutations
       onError: (error) => {
-        const apiError = error as ApiError;
+        const apiError = toApiError(error);
         
         // Show generic error notification if not handled by specific mutation
         if (!apiError.message.includes('handled')) {
@@ -44,7 +68,7 @@ export const queryClient = new QueryClient({
 
 // Optional: Add global error boundary for queries
 export const globalErrorHandler = (error: unknown) => {
-  const apiError = error as ApiError;
+  const apiError = toApiError(error);
   
   console.error('Global query error:', apiError);
   

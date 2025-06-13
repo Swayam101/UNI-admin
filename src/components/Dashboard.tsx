@@ -11,6 +11,8 @@ import {
   SimpleGrid,
   Skeleton,
   Transition,
+  Alert,
+  Button,
 } from '@mantine/core';
 import {
   IconSchool,
@@ -19,8 +21,14 @@ import {
   IconTrendingUp,
   IconCalendar,
   IconCloudRain,
+  IconAlertCircle,
+  IconMail,
+  IconFileText,
+  IconUserPlus,
 } from '@tabler/icons-react';
 import type { Icon } from '@tabler/icons-react';
+import { useRecentActivity, useDashboardAnalytics } from '../hooks/useDashboard';
+import type { RecentActivity } from '../types/dashboard';
 
 // Digital Clock Component - Clean Style
 const DigitalClock = ({ time }: { time: Date }) => {
@@ -174,18 +182,56 @@ const WeatherWidget = () => {
   );
 };
 
+// Helper function to get activity type color and icon
+const getActivityTypeConfig = (type: RecentActivity['type']) => {
+  const configs = {
+    college: { color: 'blue', icon: IconSchool },
+    email: { color: 'green', icon: IconMail },
+    user: { color: 'orange', icon: IconUserPlus },
+    post: { color: 'teal', icon: IconFileText },
+  };
+  return configs[type] || { color: 'gray', icon: IconFileText };
+};
+
+// Helper function to format time ago
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  return `${Math.floor(diffInSeconds / 86400)} days ago`;
+};
+
 const Dashboard = () => {
-  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [statsVisible, setStatsVisible] = useState([false, false, false, false]);
   const [activityVisible, setActivityVisible] = useState(false);
   const [schoolsVisible, setSchoolsVisible] = useState(false);
   const [weatherVisible, setWeatherVisible] = useState(false);
 
+  // API hooks
+  const { 
+    data: recentActivityData = [], 
+    isLoading: isLoadingActivity, 
+    error: activityError,
+    refetch: refetchActivity 
+  } = useRecentActivity();
+  
+  const { 
+    data: analyticsData, 
+    isLoading: isLoadingAnalytics, 
+    error: analyticsError,
+    refetch: refetchAnalytics 
+  } = useDashboardAnalytics();
+
+  const loading = isLoadingActivity || isLoadingAnalytics;
+
   // Simulate loading and staggered animations
   useEffect(() => {
     const timer = setTimeout(() => {
-      setLoading(false);
       setMounted(true);
       
       // Stagger stats cards animation
@@ -208,49 +254,44 @@ const Dashboard = () => {
       // Weather widget
       setTimeout(() => setWeatherVisible(true), 200);
       
-    }, 1200);
+    }, loading ? 1200 : 300);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [loading]);
 
-  const stats = [
+  // Create stats array from analytics data
+  const stats = analyticsData ? [
     {
       title: 'Total Colleges',
-      value: '24',
-      description: '3 new this month',
+      value: analyticsData.colleges.total.toString(),
+      description: `${analyticsData.colleges.newThisMonth} new this month`,
       color: 'blue',
       icon: IconSchool,
     },
     {
       title: 'Active Users',
-      value: '1,832',
-      description: '+12% from last month',
-      color: 'green',
+      value: analyticsData.users.thisMonth.toLocaleString(),
+      description: `${analyticsData.users.percentChange}% from last month`,
+      color: analyticsData.users.percentChange.startsWith('-') ? 'red' : 'green',
       icon: IconUsers,
     },
     {
       title: 'Posts Published',
-      value: '546',
-      description: '89 this week',
+      value: analyticsData.posts.total.toLocaleString(),
+      description: `${analyticsData.posts.thisWeek} this week`,
       color: 'orange',
       icon: IconMessages,
     },
     {
       title: 'Revenue',
-      value: '$12,450',
-      description: '+8% from last month',
-      color: 'teal',
+      value: `$${analyticsData.revenue.thisMonth.toLocaleString()}`,
+      description: `${analyticsData.revenue.percentChangeComparedTo10MonthAvg}% vs 10-month avg`,
+      color: analyticsData.revenue.percentChangeComparedTo10MonthAvg.startsWith('-') ? 'red' : 'teal',
       icon: IconTrendingUp,
     },
-  ];
+  ] : [];
 
-  const recentActivity = [
-    { action: 'New college registered', school: 'Harvard University', time: '2 hours ago' },
-    { action: 'Post scheduled', school: 'Stanford University', time: '4 hours ago' },
-    { action: 'User profile updated', school: 'MIT', time: '6 hours ago' },
-    { action: 'Email campaign sent', school: 'All Colleges', time: '1 day ago' },
-  ];
-
+  // Mock data for top schools (keeping this as mock since no API endpoint provided)
   const topSchools = [
     { name: 'Harvard University', users: 245, posts: 89, revenue: '$3,400' },
     { name: 'Stanford University', users: 198, posts: 76, revenue: '$2,850' },
@@ -374,6 +415,23 @@ const Dashboard = () => {
           Array.from({ length: 4 }).map((_, index) => (
             <StatSkeleton key={index} />
           ))
+        ) : analyticsError ? (
+          // Show error state
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Alert icon={<IconAlertCircle size={16} />} color="red">
+              Error loading analytics: {analyticsError.message}
+              <Button variant="outline" size="xs" ml="md" onClick={() => refetchAnalytics()}>
+                Retry
+              </Button>
+            </Alert>
+          </div>
+        ) : stats.length === 0 ? (
+          // Show no data state
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Text ta="center" py="xl" c="dimmed">
+              No analytics data available.
+            </Text>
+          </div>
         ) : (
           // Show actual stats with staggered animation
           stats.map((stat, index) => (
@@ -452,40 +510,67 @@ const Dashboard = () => {
                     Array.from({ length: 4 }).map((_, index) => (
                       <ActivitySkeleton key={index} />
                     ))
+                  ) : activityError ? (
+                    <Alert icon={<IconAlertCircle size={16} />} color="red">
+                      Error loading recent activity: {activityError.message}
+                      <Button variant="outline" size="xs" ml="md" onClick={() => refetchActivity()}>
+                        Retry
+                      </Button>
+                    </Alert>
+                  ) : recentActivityData.length === 0 ? (
+                    <Text ta="center" py="xl" c="dimmed">
+                      No recent activity found.
+                    </Text>
                   ) : (
-                    recentActivity.map((activity, index) => (
-                      <Group 
-                        key={index}
-                        justify="space-between" 
-                        p="sm" 
-                        style={{ 
-                          borderRadius: '8px',
-                          backgroundColor: 'var(--mantine-color-default-hover)',
-                          border: '1px solid var(--mantine-color-default-border)',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          animation: `slideInRight 0.4s ease ${0.6 + (index * 0.1)}s both`
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--mantine-color-blue-0)';
-                          e.currentTarget.style.borderColor = 'var(--mantine-color-blue-3)';
-                          e.currentTarget.style.transform = 'translateX(4px)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--mantine-color-default-hover)';
-                          e.currentTarget.style.borderColor = 'var(--mantine-color-default-border)';
-                          e.currentTarget.style.transform = 'translateX(0)';
-                        }}
-                      >
-                        <div>
-                          <Text fw={500}>{activity.action}</Text>
-                          <Text size="sm" c="dimmed">{activity.school}</Text>
-                        </div>
-                        <Badge variant="outline" leftSection={<IconCalendar size={12} />}>
-                          {activity.time}
-                        </Badge>
-                      </Group>
-                    ))
+                    recentActivityData.map((activity, index) => {
+                      const { color, icon: ActivityIcon } = getActivityTypeConfig(activity.type);
+                      return (
+                        <Group 
+                          key={index}
+                          justify="space-between" 
+                          p="sm" 
+                          style={{ 
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--mantine-color-default-hover)',
+                            border: '1px solid var(--mantine-color-default-border)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            animation: `slideInRight 0.4s ease ${0.6 + (index * 0.1)}s both`
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = `var(--mantine-color-${color}-0)`;
+                            e.currentTarget.style.borderColor = `var(--mantine-color-${color}-3)`;
+                            e.currentTarget.style.transform = 'translateX(4px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'var(--mantine-color-default-hover)';
+                            e.currentTarget.style.borderColor = 'var(--mantine-color-default-border)';
+                            e.currentTarget.style.transform = 'translateX(0)';
+                          }}
+                        >
+                          <Group gap="sm">
+                            <div style={{
+                              padding: '8px',
+                              borderRadius: '8px',
+                              backgroundColor: `var(--mantine-color-${color}-1)`,
+                            }}>
+                              <ActivityIcon size={16} color={`var(--mantine-color-${color}-6)`} />
+                            </div>
+                            <div>
+                              <Text fw={500}>{activity.title}</Text>
+                              <Text size="sm" c="dimmed">{activity.description}</Text>
+                            </div>
+                          </Group>
+                          <Badge 
+                            variant="outline" 
+                            color={color}
+                            leftSection={<IconCalendar size={12} />}
+                          >
+                            {formatTimeAgo(activity.createdAt)}
+                          </Badge>
+                        </Group>
+                      );
+                    })
                   )}
                 </Stack>
               </Card>

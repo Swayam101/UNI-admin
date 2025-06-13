@@ -18,7 +18,7 @@ import {
 import { useForm } from '@mantine/form';
 import { IconMail, IconLock, IconShield, IconEye, IconAlertTriangle, IconX } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../App';
+import { useTheme } from '../hooks/useTheme';
 import { useLogin } from '../hooks/useAuth';
 import { LoginRequest, ApiError } from '../types/auth';
 

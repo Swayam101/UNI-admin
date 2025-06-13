@@ -23,12 +23,17 @@ import {
   IconEye,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
+import { useSendMassEmail } from '../hooks/useEmail';
+import { EmailTargetGroup } from '../types/email';
+import type { SendMassEmailDto } from '../types/email';
 
 interface EmailCampaign {
   id: string;
   subject: string;
   content: string;
-  recipient: 'all' | 'students' | 'schools' | 'paid' | 'free';
+  htmlContent: string;
+  recipient: EmailTargetGroup;
   status: 'draft' | 'scheduled' | 'sent' | 'sending';
   sentCount: number;
   openRate: number;
@@ -41,6 +46,9 @@ const EmailCampaigns = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // API hooks
+  const sendMassEmailMutation = useSendMassEmail();
 
   // Simulate loading
   useEffect(() => {
@@ -109,7 +117,8 @@ const EmailCampaigns = () => {
       id: '1',
       subject: 'Welcome to our platform!',
       content: 'Thank you for joining our university social network...',
-      recipient: 'all',
+      htmlContent: '',
+      recipient: EmailTargetGroup.All,
       status: 'sent',
       sentCount: 1245,
       openRate: 68.5,
@@ -120,7 +129,8 @@ const EmailCampaigns = () => {
       id: '2',
       subject: 'New features available now',
       content: 'Exciting updates have been released...',
-      recipient: 'students',
+      htmlContent: '',
+      recipient: EmailTargetGroup.Active,
       status: 'sent',
       sentCount: 892,
       openRate: 72.1,
@@ -131,7 +141,8 @@ const EmailCampaigns = () => {
       id: '3',
       subject: 'Premium features - Special offer',
       content: 'Upgrade your account and get exclusive benefits...',
-      recipient: 'free',
+      htmlContent: '',
+      recipient: EmailTargetGroup.Inactive,
       status: 'scheduled',
       sentCount: 0,
       openRate: 0,
@@ -143,7 +154,8 @@ const EmailCampaigns = () => {
       id: '4',
       subject: 'Monthly newsletter - March 2024',
       content: 'Here\'s what happened this month...',
-      recipient: 'all',
+      htmlContent: '',
+      recipient: EmailTargetGroup.All,
       status: 'draft',
       sentCount: 0,
       openRate: 0,
@@ -153,11 +165,11 @@ const EmailCampaigns = () => {
   ]);
 
   const recipientGroups = [
-    { value: 'all', label: 'All Users', count: 1832 },
-    { value: 'students', label: 'Students Only', count: 1456 },
-    { value: 'schools', label: 'College Admins', count: 24 },
-    { value: 'paid', label: 'Paid Users', count: 567 },
-    { value: 'free', label: 'Free Users', count: 1265 },
+    { value: EmailTargetGroup.All, label: 'All Users', count: 1832 },
+    { value: EmailTargetGroup.Active, label: 'Active Users', count: 1456 },
+    { value: EmailTargetGroup.Expired, label: 'Expired Users', count: 234 },
+    { value: EmailTargetGroup.CompletingProfile, label: 'Completing Profile', count: 142 },
+    { value: EmailTargetGroup.Inactive, label: 'Inactive Users', count: 98 },
   ];
 
   const handleCreateCampaign = () => {
@@ -165,7 +177,8 @@ const EmailCampaigns = () => {
       id: '',
       subject: '',
       content: '',
-      recipient: 'all',
+      htmlContent: '',
+      recipient: EmailTargetGroup.All,
       status: 'draft',
       sentCount: 0,
       openRate: 0,
@@ -184,31 +197,62 @@ const EmailCampaigns = () => {
     setCampaigns(campaigns.filter(campaign => campaign.id !== id));
   };
 
-  const handleSendCampaign = (id: string) => {
-    setCampaigns(campaigns.map(campaign => 
-      campaign.id === id 
-        ? { 
-            ...campaign, 
-            status: 'sending' as const,
-            // Simulate sending process
-            sentCount: recipientGroups.find(g => g.value === campaign.recipient)?.count || 0
-          }
-        : campaign
-    ));
-    
-    // Simulate completion after 3 seconds
-    setTimeout(() => {
-      setCampaigns(prev => prev.map(campaign => 
-        campaign.id === id 
-          ? { 
-              ...campaign, 
-              status: 'sent' as const,
-              openRate: Math.random() * 80 + 10, // Random rate between 10-90%
-              clickRate: Math.random() * 25 + 5, // Random rate between 5-30%
-            }
-          : campaign
+  const handleSendCampaign = async (campaign: EmailCampaign) => {
+    if (!campaign.subject.trim() || !campaign.content.trim()) {
+      notifications.show({
+        title: 'Validation Error',
+        message: 'Subject and content are required to send the campaign.',
+        color: 'red',
+      });
+      return;
+    }
+
+    try {
+      // Update campaign status to sending
+      setCampaigns(prev => prev.map(c => 
+        c.id === campaign.id ? { ...c, status: 'sending' as const } : c
       ));
-    }, 3000);
+
+      const emailData: SendMassEmailDto = {
+        targetGroup: campaign.recipient,
+        subject: campaign.subject,
+        text: campaign.content,
+        html: campaign.htmlContent || campaign.content, // Use HTML content if available, otherwise fallback to text
+      };
+
+      await sendMassEmailMutation.mutateAsync(emailData);
+
+      // Update campaign status to sent
+      setCampaigns(prev => prev.map(c => 
+        c.id === campaign.id 
+          ? { 
+              ...c, 
+              status: 'sent' as const,
+              sentCount: getRecipientCount(campaign.recipient),
+              openRate: Math.random() * 80 + 10, // Mock data
+              clickRate: Math.random() * 25 + 5, // Mock data
+            }
+          : c
+      ));
+
+      notifications.show({
+        title: 'Success',
+        message: `Email campaign sent successfully to ${getRecipientCount(campaign.recipient)} users!`,
+        color: 'green',
+      });
+
+    } catch {
+      // Revert campaign status back to draft on error
+      setCampaigns(prev => prev.map(c => 
+        c.id === campaign.id ? { ...c, status: 'draft' as const } : c
+      ));
+
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to send email campaign. Please try again.',
+        color: 'red',
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -230,8 +274,6 @@ const EmailCampaigns = () => {
   };
 
   const totalSent = campaigns.filter(c => c.status === 'sent').reduce((sum, c) => sum + c.sentCount, 0);
-  const avgOpenRate = campaigns.filter(c => c.status === 'sent').reduce((sum, c) => sum + c.openRate, 0) / campaigns.filter(c => c.status === 'sent').length || 0;
-  const avgClickRate = campaigns.filter(c => c.status === 'sent').reduce((sum, c) => sum + c.clickRate, 0) / campaigns.filter(c => c.status === 'sent').length || 0;
 
   const rows = campaigns.map((campaign) => (
     <Table.Tr key={campaign.id}>
@@ -260,7 +302,9 @@ const EmailCampaigns = () => {
             <ActionIcon 
               variant="subtle" 
               color="green" 
-              onClick={() => handleSendCampaign(campaign.id)}
+              onClick={() => handleSendCampaign(campaign)}
+              loading={sendMassEmailMutation.isPending}
+              disabled={sendMassEmailMutation.isPending}
             >
               <IconSend size={16} />
             </ActionIcon>
@@ -293,7 +337,7 @@ const EmailCampaigns = () => {
 
       {/* Campaign Stats */}
       <Grid>
-        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
           <Card padding="lg" radius="md" withBorder>
             {loading ? (
               <>
@@ -308,7 +352,7 @@ const EmailCampaigns = () => {
             )}
           </Card>
         </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
           <Card padding="lg" radius="md" withBorder>
             {loading ? (
               <>
@@ -319,36 +363,6 @@ const EmailCampaigns = () => {
               <>
                 <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Campaigns</Text>
                 <Text fw={700} size="xl">{campaigns.length}</Text>
-              </>
-            )}
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Card padding="lg" radius="md" withBorder>
-            {loading ? (
-              <>
-                <Skeleton height={12} width="70%" mb="xs" />
-                <Skeleton height={28} width="50%" />
-              </>
-            ) : (
-              <>
-                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Avg Open Rate</Text>
-                <Text fw={700} size="xl">{avgOpenRate.toFixed(1)}%</Text>
-              </>
-            )}
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 3 }}>
-          <Card padding="lg" radius="md" withBorder>
-            {loading ? (
-              <>
-                <Skeleton height={12} width="70%" mb="xs" />
-                <Skeleton height={28} width="50%" />
-              </>
-            ) : (
-              <>
-                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Avg Click Rate</Text>
-                <Text fw={700} size="xl">{avgClickRate.toFixed(1)}%</Text>
               </>
             )}
           </Card>
@@ -404,25 +418,35 @@ const EmailCampaigns = () => {
 
           <Select
             label="Recipients"
-            description={`Will send to ${getRecipientCount(editingCampaign?.recipient || 'all').toLocaleString()} users`}
+            description={`Will send to ${getRecipientCount(editingCampaign?.recipient || EmailTargetGroup.All).toLocaleString()} users`}
             data={recipientGroups.map(group => ({
               value: group.value,
-              label: `${group.label} (${group.count.toLocaleString()})`
+              label: group.label
             }))}
-            value={editingCampaign?.recipient || 'all'}
+            value={editingCampaign?.recipient || EmailTargetGroup.All}
             onChange={(value) => setEditingCampaign(prev => 
-              prev ? {...prev, recipient: value as 'all' | 'students' | 'schools' | 'paid' | 'free'} : null
+              prev ? {...prev, recipient: value as EmailTargetGroup} : null
             )}
           />
 
           <Textarea
-            label="Email Content"
+            label="Email Content (Text)"
             placeholder="Write your email content here..."
             value={editingCampaign?.content || ''}
             onChange={(event) => setEditingCampaign(prev => 
               prev ? {...prev, content: event.currentTarget.value} : null
             )}
-            minRows={6}
+            minRows={4}
+          />
+
+          <Textarea
+            label="HTML Content (Optional)"
+            placeholder="Write your HTML content here..."
+            value={editingCampaign?.htmlContent || ''}
+            onChange={(event) => setEditingCampaign(prev => 
+              prev ? {...prev, htmlContent: event.currentTarget.value} : null
+            )}
+            minRows={4}
           />
 
           <Group justify="flex-end">
@@ -446,6 +470,7 @@ const EmailCampaigns = () => {
                 }
                 close();
               }}
+              disabled={!editingCampaign?.subject.trim() || !editingCampaign?.content.trim()}
             >
               {editingCampaign?.id ? 'Update' : 'Create'} Campaign
             </Button>

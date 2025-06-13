@@ -28,14 +28,18 @@ import {
   IconBrandSnapchat,
   IconCalendar,
   IconMapPin,
+  IconMessageDots,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { useUsers, useUpdateUser } from '../hooks/useUser';
+import TestimonialModal from './TestimonialModal';
 import type { User } from '../types/user';
 
 const UserManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [testimonialOpened, { open: openTestimonial, close: closeTestimonial }] = useDisclosure(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [testimonialUser, setTestimonialUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -87,6 +91,7 @@ const UserManagement = () => {
             <Table.Td>
               <Group gap="xs">
                 <Skeleton height={28} width={28} circle />
+                <Skeleton height={28} width={28} circle />
               </Group>
             </Table.Td>
           </Table.Tr>
@@ -98,6 +103,11 @@ const UserManagement = () => {
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
     open();
+  };
+
+  const handleCreateTestimonial = (user: User) => {
+    setTestimonialUser(user);
+    openTestimonial();
   };
 
   const handleUpdateUserStatus = async (id: string, updates: { isApproved?: boolean; isPremium?: boolean }) => {
@@ -181,6 +191,9 @@ const UserManagement = () => {
         <Group gap="xs">
           <ActionIcon variant="subtle" color="blue" onClick={() => handleViewUser(user)}>
             <IconEye size={16} />
+          </ActionIcon>
+          <ActionIcon variant="subtle" color="orange" onClick={() => handleCreateTestimonial(user)}>
+            <IconMessageDots size={16} />
           </ActionIcon>
         </Group>
       </Table.Td>
@@ -507,6 +520,12 @@ const UserManagement = () => {
           </Stack>
         )}
       </Modal>
+
+      <TestimonialModal
+        opened={testimonialOpened}
+        onClose={closeTestimonial}
+        user={testimonialUser}
+      />
     </Stack>
   );
 };

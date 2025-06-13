@@ -25,9 +25,10 @@ import {
   IconSun,
   IconChevronDown,
   IconCreditCard,
+  IconMessageDots,
 } from '@tabler/icons-react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../App';
+import { useTheme } from '../hooks/useTheme';
 import { useLogout, useCurrentUser } from '../hooks/useAuth';
 import Dashboard from './Dashboard';
 import SchoolManagement from './SchoolManagement';
@@ -36,6 +37,7 @@ import PostManagement from './PostManagement';
 import Analytics from './Analytics';
 import EmailCampaigns from './EmailCampaigns';
 import PaymentManagement from './PaymentManagement';
+import TestimonialManagement from './TestimonialManagement';
 import CollegeFormPage from './CollegeFormPage';
 
 const AdminDashboard = () => {
@@ -54,6 +56,7 @@ const AdminDashboard = () => {
     { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
     { icon: IconMail, label: 'Email Campaigns', path: '/emails' },
     { icon: IconCreditCard, label: 'Payment Management', path: '/payments' },
+    { icon: IconMessageDots, label: 'Testimonial Management', path: '/testimonials' },
   ];
 
   const getCurrentPageTitle = () => {
@@ -247,6 +250,7 @@ const AdminDashboard = () => {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/emails" element={<EmailCampaigns />} />
             <Route path="/payments" element={<PaymentManagement />} />
+            <Route path="/testimonials" element={<TestimonialManagement />} />
             <Route path="/schools/add" element={<CollegeFormPage />} />
             <Route path="/schools/edit/:id" element={<CollegeFormPage />} />
           </Routes>
