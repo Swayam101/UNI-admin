@@ -6,6 +6,7 @@ import {
   RefreshTokenResponse,
   User
 } from '../types/auth';
+import { ApiResponse } from '../types/api';
 
 export class AuthService {
   /**
@@ -14,10 +15,11 @@ export class AuthService {
   static async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
       const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+      console.log("login response auth service", response);
       
-      // Check if login was successful (status 200)
-      if (response.data.status === 200 && response.data.data.token) {
-        const { token } = response.data.data;
+      // Check if login was successful (status should be string now)
+      if (response.status == '200' && response.data.token) {
+        const { token } = response.data;
         
         // Store token in localStorage (no refresh token from this API)
         localStorage.setItem('auth_token', token);
@@ -32,7 +34,7 @@ export class AuthService {
         console.log('✅ Token stored in localStorage');
       }
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -46,7 +48,7 @@ export class AuthService {
     try {
       const response = await apiClient.post<LogoutResponse>('/auth/logout');
       clearAuthTokens();
-      return response.data;
+      return response;
     } catch (error) {
       // Clear tokens even if logout fails
       clearAuthTokens();
@@ -64,13 +66,13 @@ export class AuthService {
         refreshToken,
       });
       
-      if (response.data.success) {
-        const { token } = response.data.data;
+      if (response.success) {
+        const { token } = response.data;
         // Update only the access token
         setAuthTokens(token);
       }
       
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Token refresh error:', error);
       clearAuthTokens();
@@ -83,11 +85,12 @@ export class AuthService {
    */
   static async getCurrentUser(): Promise<User> {
     try {
-      const response = await apiClient.get<{ status: number; data: User }>('/auth/me');
+      const response = await apiClient.get<ApiResponse<User>>('/auth/me');
+      console.log("getting user data", response);
       
       // Handle the API response format
-      if (response.data.status === 200) {
-        return response.data.data;
+      if (response.status == '200') {
+        return response.data;
       }
       
       throw new Error('Failed to get user data');
@@ -118,7 +121,7 @@ export class AuthService {
       const response = await apiClient.post<{ success: boolean; message: string }>('/auth/forgot-password', {
         email,
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Password reset request error:', error);
       throw error;
@@ -134,7 +137,7 @@ export class AuthService {
         token,
         password: newPassword,
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Password reset error:', error);
       throw error;
@@ -150,7 +153,7 @@ export class AuthService {
         currentPassword,
         newPassword,
       });
-      return response.data;
+      return response;
     } catch (error) {
       console.error('Change password error:', error);
       throw error;

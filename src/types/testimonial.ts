@@ -1,3 +1,5 @@
+import { ApiResponse } from './api';
+
 export interface Testimonial {
   _id?: string;
   user: {
@@ -28,20 +30,13 @@ export interface UpdateTestimonialRequest {
   isActive?: boolean;
 }
 
-export interface TestimonialResponse {
-  status: number;
-  message: string;
-  data: Testimonial | Testimonial[];
-}
+export type TestimonialResponse = ApiResponse<Testimonial | Testimonial[]>;
 
-export interface TestimonialListResponse {
-  status: number;
-  message: string;
-  data: Testimonial[];
-}
+export type TestimonialListResponse = ApiResponse<{
+  testimonials: Testimonial[],
+  total: number,
+  currentPage: number,
+  pages: number
+}>;
 
-export interface TestimonialDetailResponse {
-  status: number;
-  message: string;
-  data: Testimonial;
-} 
+export type TestimonialDetailResponse = ApiResponse<Testimonial>; 

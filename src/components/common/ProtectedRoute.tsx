@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Center, Loader, Text, Stack, Box } from '@mantine/core';
 import { IconShield } from '@tabler/icons-react';
-import { useCurrentUser } from '../hooks/useAuth';
-import { isAuthenticated, clearAuthTokens } from '../lib/api';
-import { useTheme } from '../hooks/useTheme';
+import { useCurrentUser } from '../../hooks/useAuth';
+import { isAuthenticated, clearAuthTokens } from '../../lib/api';
+import { useTheme } from '../../hooks/useTheme';
 
 
 interface ProtectedRouteProps {
@@ -26,7 +26,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       clearAuthTokens();
     }
   }, [isError]);
-
+  console.log(!isAuthenticated(),isLoading,isError);
+  
   // If no token exists, redirect to login immediately
   if (!isAuthenticated()) {
     return <Navigate to="/login" state={{ from: location }} replace />;

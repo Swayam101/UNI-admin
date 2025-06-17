@@ -1,3 +1,5 @@
+import { ApiResponse } from './api';
+
 // Authentication related types
 export interface LoginRequest {
   email: string;
@@ -5,16 +7,16 @@ export interface LoginRequest {
   rememberMe?: boolean;
 }
 
-export interface LoginResponse {
-  status: number;
-  message: string;
-  data: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    token: string;
-    isProfileCompleted: boolean;
-  };
+export interface LoginData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  token: string;
+  isProfileCompleted: boolean;
+}
+
+export interface LoginResponse extends ApiResponse<LoginData> {
+  status: string;
 }
 
 export interface User {
@@ -63,17 +65,17 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
-export interface RefreshTokenResponse {
-  success: boolean;
-  data: {
-    token: string;
-    expiresAt: string;
-  };
+export interface RefreshTokenData {
+  token: string;
+  expiresAt: string;
 }
 
-export interface LogoutResponse {
+export interface RefreshTokenResponse extends ApiResponse<RefreshTokenData> {
   success: boolean;
-  message: string;
+}
+
+export interface LogoutResponse extends ApiResponse<null> {
+  success: boolean;
 }
 
 export interface ApiError {

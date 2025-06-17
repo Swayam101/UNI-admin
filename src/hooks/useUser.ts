@@ -11,20 +11,26 @@ import type {
   UpdateUserRequest 
 } from '../types/user';
 
+interface UseUsersParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 // Query Keys
 export const USER_QUERY_KEYS = {
   all: ['users'] as const,
   lists: () => [...USER_QUERY_KEYS.all, 'list'] as const,
-  list: (filters: Record<string, string | number | boolean>) => [...USER_QUERY_KEYS.lists(), { filters }] as const,
+  list: (filters: UseUsersParams) => [...USER_QUERY_KEYS.lists(), { filters }] as const,
   details: () => [...USER_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...USER_QUERY_KEYS.details(), id] as const,
 };
 
 // Hooks for Queries
-export const useUsers = (): UseQueryResult<User[], Error> => {
+export const useUsers = (params?: UseUsersParams) => {
   return useQuery({
-    queryKey: USER_QUERY_KEYS.lists(),
-    queryFn: userService.getAllUsers,
+    queryKey: USER_QUERY_KEYS.list(params || {}),
+    queryFn: () => userService.getAllUsers(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });

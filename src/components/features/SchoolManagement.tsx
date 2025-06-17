@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Title,
@@ -15,6 +15,8 @@ import {
   Skeleton,
   Alert,
   Switch,
+  Pagination,
+  Select,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -24,16 +26,38 @@ import {
   IconSearch,
   IconAlertCircle,
 } from '@tabler/icons-react';
-import { useColleges, useDeleteCollege } from '../hooks/useCollege';
-import type { College } from '../types/college';
+import { useColleges, useDeleteCollege, useUpdateCollege } from '../../hooks/useCollege';
+import type { College } from '../../types/college';
+import { useDebouncedValue } from '@mantine/hooks';
 
 const SchoolManagement = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // Debounce search query to avoid too many API calls
+  const [debouncedSearch] = useDebouncedValue(searchQuery, 500);
 
-  // API hooks
-  const { data: colleges = [], isLoading, error, refetch } = useColleges();
+  // API hooks with parameters
+  const { data: collegeData, isLoading, error, refetch } = useColleges({
+    search: debouncedSearch || undefined,
+    page: currentPage,
+    limit: pageSize,
+  });
+  
   const deleteMutation = useDeleteCollege();
+  const updateMutation = useUpdateCollege();
+
+  // Extract data from API response
+  const colleges = collegeData?.colleges || [];
+  const totalColleges = collegeData?.total || 0;
+  const totalPages = collegeData?.pages || 1;
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   // Skeleton Components
   const TableSkeleton = () => (
@@ -49,7 +73,7 @@ const SchoolManagement = () => {
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {Array.from({ length: 4 }).map((_, index) => (
+        {Array.from({ length: pageSize }).map((_, index) => (
           <Table.Tr key={index}>
             <Table.Td>
               <Group gap="sm">
@@ -111,11 +135,31 @@ const SchoolManagement = () => {
     }
   };
 
-  const filteredColleges = colleges.filter(college =>
-    college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    college.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    college.country.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleInstagramToggle = async (college: College) => {
+    if (!college._id) return;
+    
+    try {
+      await updateMutation.mutateAsync({
+        id: college._id,
+        data: {
+          isInstagramActive: !college.isInstagramActive
+        }
+      });
+    } catch (error) {
+      console.error('Error updating Instagram status:', error);
+    }
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((value: string | null) => {
+    if (value) {
+      setPageSize(parseInt(value));
+      setCurrentPage(1);
+    }
+  }, []);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
@@ -130,9 +174,9 @@ const SchoolManagement = () => {
     return !!(college.instagramBusinessId && college.instagramAccessToken);
   };
 
-  const rows = filteredColleges.map((college) => (
+  const rows = colleges.map((college) => (
     <Table.Tr key={college._id}>
-      <Table.Td>
+      <Table.Td>  
         <Group gap="sm">
           <Avatar 
             size={40} 
@@ -166,13 +210,23 @@ const SchoolManagement = () => {
       <Table.Td>
         <Group gap="xs">
           <Switch
-            checked={hasInstagramIntegration(college)}
-            readOnly
+            checked={college.isInstagramActive || false}
+            onChange={() => handleInstagramToggle(college)}
+            disabled={!hasInstagramIntegration(college) || updateMutation.isPending}
             size="sm"
           />
           {hasInstagramIntegration(college) && (
-            <Badge leftSection={<IconBrandInstagram size={12} />} color="pink" variant="light">
-              Connected
+            <Badge 
+              leftSection={<IconBrandInstagram size={12} />} 
+              color={college.isInstagramActive ? "green" : "gray"} 
+              variant="light"
+            >
+              {college.isInstagramActive ? "Active" : "Inactive"}
+            </Badge>
+          )}
+          {!hasInstagramIntegration(college) && (
+            <Badge color="red" variant="light">
+              Not Setup
             </Badge>
           )}
         </Group>
@@ -205,7 +259,7 @@ const SchoolManagement = () => {
           </>
         ) : (
           <>
-            <Title order={1}>College Management</Title>
+            <Title order={1}>College Management </Title>
             <Button leftSection={<IconPlus size={16} />} onClick={handleAddCollege}>
               Add College
             </Button>
@@ -227,18 +281,37 @@ const SchoolManagement = () => {
           {isLoading ? (
             <>
               <Skeleton height={16} width={120} />
-              <Skeleton height={36} width={300} />
+              <Group>
+                <Skeleton height={36} width={100} />
+                <Skeleton height={36} width={300} />
+              </Group>
             </>
           ) : (
             <>
-              <Text fw={500}>Colleges ({colleges.length})</Text>
-              <TextInput
-                placeholder="Search colleges..."
-                leftSection={<IconSearch size={16} />}
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.currentTarget.value)}
-                style={{ width: 300 }}
-              />
+              <Text fw={500}>
+                Colleges ({colleges.length} of {totalColleges})
+                {debouncedSearch && ` - Search: "${debouncedSearch}"`}
+              </Text>
+              <Group>
+                <Select
+                  value={pageSize.toString()}
+                  onChange={handlePageSizeChange}
+                  data={[
+                    { value: '5', label: '5 per page' },
+                    { value: '10', label: '10 per page' },
+                    { value: '25', label: '25 per page' },
+                    { value: '50', label: '50 per page' },
+                  ]}
+                  w={120}
+                />
+                <TextInput
+                  placeholder="Search colleges..."
+                  leftSection={<IconSearch size={16} />}
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.currentTarget.value)}
+                  style={{ width: 300 }}
+                />
+              </Group>
             </>
           )}
         </Group>
@@ -257,7 +330,7 @@ const SchoolManagement = () => {
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {rows.length > 0 ? rows : (
+                {rows && rows.length > 0 ? rows : (
                   <Table.Tr>
                     <Table.Td colSpan={6}>
                       <Text ta="center" py="xl" c="dimmed">
@@ -270,6 +343,19 @@ const SchoolManagement = () => {
             </Table>
           )}
         </Table.ScrollContainer>
+
+        {/* Pagination */}
+        {!isLoading && totalPages > 1 && (
+          <Group justify="center" mt="md">
+            <Pagination
+              value={currentPage}
+              onChange={handlePageChange}
+              total={totalPages}
+              size="sm"
+              withEdges
+            />
+          </Group>
+        )}
       </Card>
     </Stack>
   );

@@ -1,3 +1,5 @@
+import { ApiResponse } from './api';
+
 export enum EmailTargetGroup {
   All = 'all',
   Active = 'active',
@@ -13,8 +15,4 @@ export interface SendMassEmailDto {
   html: string;
 }
 
-export interface EmailCampaignResponse {
-  status: number;
-  message: string;
-  data?: Record<string, unknown>; // More specific than any
-} 
+export type EmailCampaignResponse = ApiResponse<Record<string, unknown>>; 

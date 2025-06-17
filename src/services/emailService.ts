@@ -15,6 +15,6 @@ export const emailService = {
       EMAIL_ENDPOINTS.SEND_MASS_EMAIL,
       data
     );
-    return response.data;
+    return response;
   },
 }; 

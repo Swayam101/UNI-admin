@@ -43,6 +43,12 @@ apiClient.interceptors.response.use(
       console.log(`API Response: ${response.config.url} - ${duration}ms`);
     }
     
+    // Automatically extract .data from response for all API calls
+    // This allows services to directly use the response without accessing .data
+    if (response.data && typeof response.data === 'object') {
+      return response.data;
+    }
+    
     return response;
   },
   async (error: AxiosError) => {
@@ -113,5 +119,15 @@ declare module 'axios' {
       startTime: Date;
     };
     _retry?: boolean;
+  }
+  
+  // Override response type to reflect interceptor modification
+  // Now responses return data directly instead of AxiosResponse
+  interface AxiosInstance {
+    get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
+    post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+    put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+    patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T>;
+    delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T>;
   }
 } 

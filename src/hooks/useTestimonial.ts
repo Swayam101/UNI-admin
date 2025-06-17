@@ -2,7 +2,6 @@ import {
   useQuery, 
   useMutation, 
   useQueryClient,
-  UseQueryResult,
   UseMutationResult 
 } from '@tanstack/react-query';
 import { testimonialService } from '../services/testimonialService';
@@ -11,18 +10,24 @@ import type {
   CreateTestimonialRequest 
 } from '../types/testimonial';
 
+interface UseTestimonialsParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 // Query Keys
 export const TESTIMONIAL_QUERY_KEYS = {
   all: ['testimonials'] as const,
   lists: () => [...TESTIMONIAL_QUERY_KEYS.all, 'list'] as const,
-  list: (filters: Record<string, string | number | boolean>) => [...TESTIMONIAL_QUERY_KEYS.lists(), { filters }] as const,
+  list: (filters: UseTestimonialsParams) => [...TESTIMONIAL_QUERY_KEYS.lists(), { filters }] as const,
 };
 
 // Hooks for Queries
-export const useTestimonials = (): UseQueryResult<Testimonial[], Error> => {
+export const useTestimonials = (params?: UseTestimonialsParams) => {
   return useQuery({
-    queryKey: TESTIMONIAL_QUERY_KEYS.lists(),
-    queryFn: testimonialService.getAllTestimonials,
+    queryKey: TESTIMONIAL_QUERY_KEYS.list(params || {}),
+    queryFn: () => testimonialService.getAllTestimonials(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });

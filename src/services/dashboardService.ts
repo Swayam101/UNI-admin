@@ -17,7 +17,7 @@ export const dashboardService = {
     const response = await apiClient.get<RecentActivityResponse>(
       DASHBOARD_ENDPOINTS.RECENT_ACTIVITY
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Get dashboard analytics
@@ -25,6 +25,6 @@ export const dashboardService = {
     const response = await apiClient.get<DashboardAnalyticsResponse>(
       DASHBOARD_ENDPOINTS.DASHBOARD_ANALYTICS
     );
-    return response.data.data;
+    return response.data;
   },
 }; 

@@ -8,6 +8,12 @@ import type {
   CollegeResponse
 } from '../types/college';
 
+interface GetAllCollegesParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 const COLLEGE_ENDPOINTS = {
   CREATE: '/colleges/createCollege',
   GET_ALL: '/colleges/getAllColleges',
@@ -23,15 +29,29 @@ export const collegeService = {
       COLLEGE_ENDPOINTS.CREATE,
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get all colleges
-  getAllColleges: async (): Promise<College[]> => {
-    const response = await apiClient.get<CollegeListResponse>(
-      COLLEGE_ENDPOINTS.GET_ALL
-    );
-    return response.data.data;
+  // Get all colleges with optional search and pagination
+  getAllColleges: async (params?: GetAllCollegesParams) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.search) {
+      queryParams.append('search', params.search);
+    }
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+
+    const url = queryParams.toString() 
+      ? `${COLLEGE_ENDPOINTS.GET_ALL}?${queryParams.toString()}`
+      : COLLEGE_ENDPOINTS.GET_ALL;
+
+    const response = await apiClient.get<CollegeListResponse>(url);
+    return response.data;
   },
 
   // Get college by ID
@@ -39,7 +59,7 @@ export const collegeService = {
     const response = await apiClient.get<CollegeDetailResponse>(
       COLLEGE_ENDPOINTS.GET_BY_ID(id)
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Update college by ID
@@ -48,7 +68,7 @@ export const collegeService = {
       COLLEGE_ENDPOINTS.UPDATE_BY_ID(id),
       data
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Delete college by ID

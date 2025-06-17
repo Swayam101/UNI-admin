@@ -1,6 +1,6 @@
 import { MantineProvider } from "@mantine/core";
 import { useState, ReactNode } from "react";
-import theme from "../theme/mainTheme";
+import theme from "../styles/themes/theme/mainTheme";
 import { ThemeContext } from "./theme";
 
 // Theme Provider Component

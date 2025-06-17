@@ -1,3 +1,5 @@
+import { ApiResponse, LegacyApiResponse } from './api';
+
 export interface RecentActivity {
   type: 'college' | 'email' | 'user' | 'post';
   title: string;
@@ -5,34 +7,20 @@ export interface RecentActivity {
   createdAt: string;
 }
 
+export interface TrendData {
+  _id: string;
+  count: number;
+}
+
 export interface DashboardAnalytics {
-  colleges: {
-    total: number;
-    newThisMonth: number;
-  };
-  users: {
-    thisMonth: number;
-    lastMonth: number;
-    percentChange: string;
-  };
-  posts: {
-    total: number;
-    thisWeek: number;
-  };
-  revenue: {
-    thisMonth: number;
-    percentChangeComparedTo10MonthAvg: string;
-  };
+  totalColleges: number;
+  activeUsers: number;
+  postsThisWeek: number;
+  revenue: number;
+  signupTrend: TrendData[];
+  postTrend: TrendData[];
 }
 
-export interface RecentActivityResponse {
-  status: number;
-  message: string;
-  data: RecentActivity[];
-}
+export type RecentActivityResponse = ApiResponse<RecentActivity[]>;
 
-export interface DashboardAnalyticsResponse {
-  status: number;
-  message: string;
-  data: DashboardAnalytics;
-} 
+export type DashboardAnalyticsResponse = LegacyApiResponse<DashboardAnalytics>; 

@@ -27,20 +27,12 @@ import {
   IconCreditCard,
   IconMessageDots,
 } from '@tabler/icons-react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
 import { useLogout, useCurrentUser } from '../hooks/useAuth';
-import Dashboard from './Dashboard';
-import SchoolManagement from './SchoolManagement';
-import UserManagement from './UserManagement';
-import PostManagement from './PostManagement';
-import Analytics from './Analytics';
-import EmailCampaigns from './EmailCampaigns';
-import PaymentManagement from './PaymentManagement';
-import TestimonialManagement from './TestimonialManagement';
-import CollegeFormPage from './CollegeFormPage';
+import { DashboardRoutes } from '../routes';
 
-const AdminDashboard = () => {
+const DashboardLayout = () => {
   const [opened, setOpened] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -198,7 +190,7 @@ const AdminDashboard = () => {
                   color="red"
                   onClick={handleLogout}
                 >
-                  Logout
+                  Sign Out
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
@@ -206,58 +198,54 @@ const AdminDashboard = () => {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">
-        
-
-        <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="md">
-          Navigation
-        </Text>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: rem(4) }}>
-          {navigationItems.map((item) => (
-            <NavLink
-              key={item.path}
-              active={location.pathname === item.path}
-              label={item.label}
-              leftSection={<item.icon size={20} />}
-              onClick={() => {
-                navigate(item.path);
-                setOpened(false);
-              }}
-              style={{
-                borderRadius: rem(8),
-                fontSize: rem(14),
-                fontWeight: 500,
-              }}
-            />
-          ))}
+      <AppShell.Navbar p="md" style={{ borderRight: '1px solid var(--mantine-color-default-border)' }}>
+        <div style={{ marginBottom: rem(16) }}>
+          <Title order={5} style={{ marginBottom: rem(8), color: 'var(--mantine-color-dimmed)' }}>
+            Navigation
+          </Title>
         </div>
-
-        <div style={{ marginTop: 'auto', paddingTop: rem(16), borderTop: '1px solid var(--mantine-color-default-border)' }}>
-          <Text size="xs" c="dimmed" ta="center">
-            INCOMING-CLASS Admin v1.0
-          </Text>
-        </div>
+        
+        {navigationItems.map((item) => (
+          <NavLink
+            key={item.path}
+            label={item.label}
+            leftSection={<item.icon size={20} />}
+            active={location.pathname === item.path}
+            onClick={() => {
+              navigate(item.path);
+              setOpened(false);
+            }}
+            style={{
+              borderRadius: rem(8),
+              marginBottom: rem(4),
+              transition: 'all 0.2s ease',
+            }}
+            styles={{
+              root: {
+                '&:hover': {
+                  backgroundColor: 'var(--mantine-color-default-hover)',
+                  transform: 'translateX(4px)',
+                },
+                '&[data-active]': {
+                  backgroundColor: 'var(--mantine-color-primary-light)',
+                  color: 'var(--mantine-color-primary-filled)',
+                  fontWeight: 600,
+                  transform: 'translateX(4px)',
+                  boxShadow: '0 2px 8px rgba(51, 154, 240, 0.2)',
+                },
+              },
+            }}
+          />
+        ))}
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Container size="xl" p={0}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/schools" element={<SchoolManagement />} />
-            <Route path="/users" element={<UserManagement />} />
-            <Route path="/posts" element={<PostManagement />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/emails" element={<EmailCampaigns />} />
-            <Route path="/payments" element={<PaymentManagement />} />
-            <Route path="/testimonials" element={<TestimonialManagement />} />
-            <Route path="/schools/add" element={<CollegeFormPage />} />
-            <Route path="/schools/edit/:id" element={<CollegeFormPage />} />
-          </Routes>
+        <Container size="xl" style={{ paddingTop: rem(20) }}>
+          <DashboardRoutes />
         </Container>
       </AppShell.Main>
     </AppShell>
   );
 };
 
-export default AdminDashboard; 
+export default DashboardLayout; 

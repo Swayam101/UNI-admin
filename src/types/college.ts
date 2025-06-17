@@ -5,6 +5,7 @@ export interface College {
   logoUrl?: string;
   instagramBusinessId?: string;
   instagramAccessToken?: string;
+  isInstagramActive?: boolean;
   websiteUrl?: string;
   email: string;
   phoneNumber: string;
@@ -36,6 +37,7 @@ export interface CreateCollegeRequest {
   logoUrl?: string;
   instagramBusinessId?: string;
   instagramAccessToken?: string;
+  isInstagramActive?: boolean;
   websiteUrl?: string;
   email: string;
   phoneNumber: string;
@@ -65,6 +67,7 @@ export interface UpdateCollegeRequest {
   logoUrl?: string;
   instagramBusinessId?: string;
   instagramAccessToken?: string;
+  isInstagramActive?: boolean;
   websiteUrl?: string;
   email?: string;
   phoneNumber?: string;
@@ -88,26 +91,22 @@ export interface UpdateCollegeRequest {
   motto?: string;
 }
 
-export interface CollegeResponse {
-  statusCode: number;
-  timestamp: string;
-  path: string;
-  message: string;
-  data: College | College[];
-}
+import { ApiResponse, LegacyApiResponse } from './api';
 
-export interface CollegeListResponse {
-  statusCode: number;
-  timestamp: string;
-  path: string;
-  message: string;
-  data: College[];
-}
+export type CollegeResponse = ApiResponse<College | College[]>;
 
-export interface CollegeDetailResponse {
-  statusCode: number;
-  timestamp: string;
-  path: string;
-  message: string;
-  data: College;
-} 
+export type CollegeListResponse = ApiResponse<{
+  colleges: College[],
+  total: number,
+  currentPage: number,
+  pages: number
+}>;
+
+export type CollegeDetailResponse = ApiResponse<College>;
+
+// Legacy response types for backward compatibility
+export type LegacyCollegeResponse = LegacyApiResponse<College | College[]>;
+
+export type LegacyCollegeListResponse = LegacyApiResponse<College[]>;
+
+export type LegacyCollegeDetailResponse = LegacyApiResponse<College>; 

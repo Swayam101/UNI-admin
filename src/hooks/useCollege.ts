@@ -12,20 +12,26 @@ import type {
   UpdateCollegeRequest 
 } from '../types/college';
 
+interface UseCollegesParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 // Query Keys
 export const COLLEGE_QUERY_KEYS = {
   all: ['colleges'] as const,
   lists: () => [...COLLEGE_QUERY_KEYS.all, 'list'] as const,
-  list: (filters: Record<string, string | number | boolean>) => [...COLLEGE_QUERY_KEYS.lists(), { filters }] as const,
+  list: (filters: UseCollegesParams) => [...COLLEGE_QUERY_KEYS.lists(), { filters }] as const,
   details: () => [...COLLEGE_QUERY_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...COLLEGE_QUERY_KEYS.details(), id] as const,
 };
 
 // Hooks for Queries
-export const useColleges = (): UseQueryResult<College[], Error> => {
+export const useColleges = (params?: UseCollegesParams) =>{
   return useQuery({
-    queryKey: COLLEGE_QUERY_KEYS.lists(),
-    queryFn: collegeService.getAllColleges,
+    queryKey: COLLEGE_QUERY_KEYS.list(params || {}),
+    queryFn: () => collegeService.getAllColleges(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });

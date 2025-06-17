@@ -29,8 +29,8 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { useTestimonials, useDeleteTestimonial } from '../hooks/useTestimonial';
-import type { Testimonial } from '../types/testimonial';
+import { useTestimonials, useDeleteTestimonial } from '../../hooks/useTestimonial';
+import type { Testimonial } from '../../types/testimonial';
 
 const TestimonialManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -38,11 +38,14 @@ const TestimonialManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // API hooks
-  const { data: testimonials = [], isLoading, error, refetch } = useTestimonials();
+  const { data: testimonialData, isLoading, error, refetch } = useTestimonials();
   const deleteTestimonialMutation = useDeleteTestimonial();
 
+  // Extract testimonials array from structured response
+  const testimonials = testimonialData?.testimonials || [];
+  const totalTestimonials = testimonialData?.total || testimonials.length;
+
   // Calculate stats
-  const totalTestimonials = testimonials.length;
   const activeTestimonials = testimonials.filter(t => t.isActive !== false).length;
 
   // Skeleton Components
@@ -209,7 +212,7 @@ const TestimonialManagement = () => {
         {isLoading ? (
           <Skeleton height={32} width={200} />
         ) : (
-          <Title order={1}>Testimonial Management</Title>
+          <Title order={1}>Testimonial Management </Title>
         )}
       </Group>
 

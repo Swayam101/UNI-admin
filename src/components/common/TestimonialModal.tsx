@@ -11,9 +11,9 @@ import {
   Alert,
 } from '@mantine/core';
 import { IconCheck, IconMessageDots, IconAlertTriangle } from '@tabler/icons-react';
-import { useCreateTestimonial } from '../hooks/useTestimonial';
-import type { User } from '../types/user';
-import type { ApiError } from '../types/auth';
+import { useCreateTestimonial } from '../../hooks/useTestimonial';
+import type { User } from '../../types/user';
+import type { ApiError } from '../../types/auth';
 
 interface TestimonialModalProps {
   opened: boolean;

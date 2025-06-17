@@ -6,6 +6,12 @@ import type {
   UserDetailResponse
 } from '../types/user';
 
+interface GetAllUsersParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 const USER_ENDPOINTS = {
   GET_ALL: '/users/getAllUsers',
   GET_BY_ID: (id: string) => `/users/fetchUserById/${id}`,
@@ -13,12 +19,26 @@ const USER_ENDPOINTS = {
 } as const;
 
 export const userService = {
-  // Get all users
-  getAllUsers: async (): Promise<User[]> => {
-    const response = await apiClient.get<UserListResponse>(
-      USER_ENDPOINTS.GET_ALL
-    );
-    return response.data.data;
+  // Get all users with optional search and pagination
+  getAllUsers: async (params?: GetAllUsersParams) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.search) {
+      queryParams.append('search', params.search);
+    }
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+
+    const url = queryParams.toString() 
+      ? `${USER_ENDPOINTS.GET_ALL}?${queryParams.toString()}`
+      : USER_ENDPOINTS.GET_ALL;
+
+    const response = await apiClient.get<UserListResponse>(url);
+    return response.data;
   },
 
   // Get user by ID
@@ -26,7 +46,7 @@ export const userService = {
     const response = await apiClient.get<UserDetailResponse>(
       USER_ENDPOINTS.GET_BY_ID(id)
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Update user by ID
@@ -35,6 +55,6 @@ export const userService = {
       USER_ENDPOINTS.UPDATE_BY_ID(id),
       data
     );
-    return response.data.data;
+    return response.data;
   },
 }; 

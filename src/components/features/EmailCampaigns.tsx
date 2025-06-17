@@ -24,9 +24,9 @@ import {
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { useSendMassEmail } from '../hooks/useEmail';
-import { EmailTargetGroup } from '../types/email';
-import type { SendMassEmailDto } from '../types/email';
+import { useSendMassEmail } from '../../hooks/useEmail';
+import { EmailTargetGroup } from '../../types/email';
+import type { SendMassEmailDto } from '../../types/email';
 
 interface EmailCampaign {
   id: string;
