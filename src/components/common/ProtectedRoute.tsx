@@ -26,10 +26,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       clearAuthTokens();
     }
   }, [isError]);
-  console.log(!isAuthenticated(),isLoading,isError);
+  console.log(!isAuthenticated(),isLoading,isError,"printing all this");
   
   // If no token exists, redirect to login immediately
   if (!isAuthenticated()) {
+    console.log("redirecting to login");
+    
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -104,6 +106,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // If there's an error or no user data, redirect to login
   if (isError || !user || user.role !== 'admin')  {
+    console.log("redirecting to login",isError,user,);
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

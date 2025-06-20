@@ -83,17 +83,21 @@ const DashboardPage = () => {
     totalSchools: analyticsData.totalColleges,
     totalUsers: analyticsData.activeUsers,
     totalPosts: analyticsData.postsThisWeek,
-    growthRate: 23.5, // Mock growth rate since not provided by API
+    totalColleges: analyticsData.totalColleges,
+    collegesLastWeek: analyticsData.collegesLastWeek,
+    collegeIncreasePercentage: analyticsData.collegeIncreasePercentage,
+    activeUsers: analyticsData.activeUsers,
+    usersAddedLastWeek: analyticsData.usersAddedLastWeek,
+    postsThisWeek: analyticsData.postsThisWeek,
+    revenue: analyticsData.revenue,
+    signupTrend: analyticsData.signupTrend,
+    postTrend: analyticsData.postTrend,
+    lastMonthRevenue: analyticsData.lastMonthRevenue,
+    collegePerformance: analyticsData.collegePerformance,
   } : undefined;
 
   // Mock data for top schools (keeping this as mock since no API endpoint provided)
-  const topSchoolsData = [
-    { name: 'Harvard University', studentCount: 2847, maxStudents: 3000, color: 'red' },
-    { name: 'Stanford University', studentCount: 2156, maxStudents: 2500, color: 'blue' },
-    { name: 'MIT', studentCount: 1934, maxStudents: 2200, color: 'green' },
-    { name: 'Yale University', studentCount: 1782, maxStudents: 2100, color: 'purple' },
-    { name: 'Princeton University', studentCount: 1543, maxStudents: 1800, color: 'orange' },
-  ];
+  
 
   return (
     <Stack gap="lg">
@@ -192,7 +196,10 @@ const DashboardPage = () => {
                 {loading ? (
                   <TopSchoolsSkeleton />
                 ) : (
-                  <TopSchools schools={topSchoolsData} />
+                  <TopSchools totals={{
+                    totalUsers: statsData?.totalUsers || 0,
+                    totalPosts: statsData?.totalPosts || 0,
+                  }} schools={statsData?.collegePerformance || []} />
                 )}
               </div>
             )}

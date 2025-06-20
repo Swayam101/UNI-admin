@@ -1,12 +1,30 @@
 import { 
   useMutation,
-  UseMutationResult 
+  useQuery,
+  UseMutationResult,
+  UseQueryResult
 } from '@tanstack/react-query';
 import { emailService } from '../services/emailService';
 import type { 
   SendMassEmailDto,
-  EmailCampaignResponse
+  EmailCampaignResponse,
+  GetEmailCampaignsParams,
+  EmailCampaignsResponse
 } from '../types/email';
+
+// Query key factory
+const emailKeys = {
+  all: ['emails'] as const,
+  campaigns: (params: GetEmailCampaignsParams) => [...emailKeys.all, 'campaigns', params] as const,
+};
+
+// Hook for fetching campaigns
+export const useGetEmailCampaigns = (params: GetEmailCampaignsParams): UseQueryResult<EmailCampaignsResponse, Error> => {
+  return useQuery({
+    queryKey: emailKeys.campaigns(params),
+    queryFn: () => emailService.getAllEmailCampaigns(params),
+  });
+};
 
 // Hooks for Mutations
 export const useSendMassEmail = (): UseMutationResult<EmailCampaignResponse, Error, SendMassEmailDto> => {

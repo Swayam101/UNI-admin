@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Title,
   Card,
@@ -8,7 +8,6 @@ import {
   Modal,
   Switch,
   NumberInput,
-  Textarea,
   Grid,
 } from '@mantine/core';
 import {
@@ -21,26 +20,30 @@ import {
   PostModal,
   PostTableSkeleton,
 } from './post-management';
-
-interface Post {
-  id: string;
-  content: string;
-  author: string;
-  college: string;
-  status: 'scheduled' | 'published' | 'draft' | 'queued';
-  scheduledTime: string;
-  publishedTime: string | null;
-  instagramStatus: 'pending' | 'published' | 'failed';
-  engagement: { likes: number; comments: number };
-}
+import { useGetAllPosts, useUpdateInstagramWindow } from '../../hooks/usePosts';
+import { Post } from '../../services/postService';
 
 const PostManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+
+  const { data: postsData } = useGetAllPosts({
+    page: 1,
+    limit: 10,
+    search: searchQuery,
+  });
+
+  const { posts } = useMemo(() => {
+    if (!postsData) return { posts: [] };
+
+    return {
+      posts: postsData.data.posts,
+    };
+  }, [postsData]);
 
   // Simulate loading
   useEffect(() => {
@@ -56,75 +59,26 @@ const PostManagement = () => {
   const [endTime, setEndTime] = useState(18);
   const [postInterval, setPostInterval] = useState(30); // minutes
 
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      content: 'Amazing campus life at Harvard! 📚✨ #HarvardLife #StudentLife',
-      author: 'John Smith',
-      college: 'Harvard University',
-      status: 'published',
-      scheduledTime: '2024-03-20T10:00:00',
-      publishedTime: '2024-03-20T10:00:00',
-      instagramStatus: 'published',
-      engagement: { likes: 245, comments: 18 },
-    },
-    {
-      id: '2',
-      content: 'Study session at the library before finals 💪 #StanfordStudy #Finals',
-      author: 'Sarah Johnson',
-      college: 'Stanford University',
-      status: 'scheduled',
-      scheduledTime: '2024-03-21T14:30:00',
-      publishedTime: null,
-      instagramStatus: 'pending',
-      engagement: { likes: 0, comments: 0 },
-    },
-    {
-      id: '3',
-      content: 'MIT hackathon this weekend! Who\'s joining? 🚀 #MITHackathon #Tech',
-      author: 'Mike Chen',
-      college: 'MIT',
-      status: 'queued',
-      scheduledTime: '2024-03-22T16:00:00',
-      publishedTime: null,
-      instagramStatus: 'pending',
-      engagement: { likes: 0, comments: 0 },
-    },
-    {
-      id: '4',
-      content: 'Beautiful autumn at Yale campus 🍂 #YaleLife #Autumn',
-      author: 'Emily Davis',
-      college: 'Yale University',
-      status: 'draft',
-      scheduledTime: '',
-      publishedTime: null,
-      instagramStatus: 'pending',
-      engagement: { likes: 0, comments: 0 },
-    },
-  ]);
+  const updateInstagramWindowMutation = useUpdateInstagramWindow();
+
+  const handleSaveSettings = async () => {
+    try {
+      await updateInstagramWindowMutation.mutateAsync({
+        start: startTime,
+        end: endTime,
+        frequencyInMinutes: postInterval,
+      });
+      closeSettings();
+    } catch (error) {
+      // Error is handled by the mutation
+      console.error('Save settings failed:', error);
+    }
+  };
 
   const handleViewPost = (post: Post) => {
     setSelectedPost(post);
     open();
   };
-
-  const handleDeletePost = (id: string) => {
-    setPosts(posts.filter(post => post.id !== id));
-  };
-
-  const handleUpdatePostStatus = (id: string, newStatus: 'scheduled' | 'published' | 'draft' | 'queued') => {
-    setPosts(posts.map(post => 
-      post.id === id ? { ...post, status: newStatus } : post
-    ));
-  };
-
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.college.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || post.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
 
   return (
     <Stack gap="lg">
@@ -135,7 +89,7 @@ const PostManagement = () => {
           variant="outline"
           onClick={openSettings}
         >
-          Settings
+          Posting Schedule
         </Button>
       </Group>
 
@@ -152,10 +106,8 @@ const PostManagement = () => {
             <PostTableSkeleton />
           ) : (
             <PostTable
-              posts={filteredPosts}
+              posts={posts}
               onViewPost={handleViewPost}
-              onDeletePost={handleDeletePost}
-              onUpdatePostStatus={handleUpdatePostStatus}
             />
           )}
         </Stack>
@@ -165,7 +117,7 @@ const PostManagement = () => {
       <PostModal
         opened={opened}
         onClose={close}
-        post={selectedPost}
+        post={selectedPost || null}
       />
 
       {/* Settings Modal */}
@@ -215,18 +167,14 @@ const PostManagement = () => {
             max={1440}
           />
 
-          <Textarea
-            label="Default Hashtags"
-            description="Default hashtags to add to posts"
-            placeholder="#university #college #student"
-            rows={3}
-          />
-
           <Group justify="flex-end" mt="md">
             <Button variant="outline" onClick={closeSettings}>
               Cancel
             </Button>
-            <Button onClick={closeSettings}>
+            <Button 
+              onClick={handleSaveSettings}
+              loading={updateInstagramWindowMutation.isPending}
+            >
               Save Settings
             </Button>
           </Group>

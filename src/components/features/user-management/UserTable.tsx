@@ -79,7 +79,8 @@ const UserTable = ({
     </Table>
   );
 
-  const getProfileStageColor = (stage: ProfileStage | undefined) => {
+  const getProfileStageColor = (stage: ProfileStage | undefined,isProfileComplete:boolean) => {
+    if(isProfileComplete) return 'green';
     switch (stage) {
       case ProfileStage.UPLOAD_PHOTOS:
         return 'red';
@@ -90,14 +91,15 @@ const UserTable = ({
       case ProfileStage.PROFILE_PREVIEW:
         return 'blue';
       case ProfileStage.PAYMENT:
-        return 'green';
+        return 'turquoise';
       default:
         return 'gray';
     }
   };
 
-  const getProfileStageLabel = (stage: ProfileStage | undefined) => {
+  const getProfileStageLabel = (stage: ProfileStage | undefined,isProfileComplete:boolean) => {
     if (!stage) return 'Not Started';
+    if (isProfileComplete) return 'Complete';
     return stage.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -129,8 +131,8 @@ const UserTable = ({
         </Badge>
       </Table.Td>
       <Table.Td>
-        <Badge color={getProfileStageColor(user.profileStage)} variant="light">
-          {getProfileStageLabel(user.profileStage)}
+        <Badge color={getProfileStageColor(user.profileStage,!!user.isProfileCompleted)} variant="light">
+          {getProfileStageLabel(user.profileStage,!!user.isProfileCompleted)}
         </Badge>
       </Table.Td>
       <Table.Td>
@@ -145,8 +147,8 @@ const UserTable = ({
         <Text size="sm">{user.collegeGraduationYear || 'N/A'}</Text>
       </Table.Td>
       <Table.Td>
-        <Badge color={user.isPremium ? 'gold' : 'gray'} variant="outline">
-          {user.isPremium ? 'Premium' : 'Free'}
+        <Badge color={user.isSubscribed ? 'gold' : 'gray'} variant="outline">
+          {user.isSubscribed ? 'Premium' : 'Free'}
         </Badge>
       </Table.Td>
       <Table.Td>

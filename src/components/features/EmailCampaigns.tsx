@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Title,
   Card,
@@ -11,52 +11,38 @@ import {
   Table,
   Badge,
   Text,
-  ActionIcon,
   Modal,
-  Grid,
   Skeleton,
+  Pagination,
+  Input,
 } from '@mantine/core';
 import {
   IconMail,
-  IconSend,
-  IconTrash,
-  IconEye,
+  IconSearch,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { useSendMassEmail } from '../../hooks/useEmail';
+import { useGetEmailCampaigns, useSendMassEmail } from '../../hooks/useEmail';
 import { EmailTargetGroup } from '../../types/email';
-import type { SendMassEmailDto } from '../../types/email';
-
-interface EmailCampaign {
-  id: string;
-  subject: string;
-  content: string;
-  htmlContent: string;
-  recipient: EmailTargetGroup;
-  status: 'draft' | 'scheduled' | 'sent' | 'sending';
-  sentCount: number;
-  openRate: number;
-  clickRate: number;
-  createdAt: string;
-  scheduledAt?: string;
-}
+import type { EmailCampaign } from '../../types/email';
 
 const EmailCampaigns = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<string>('');
+  const [group, setGroup] = useState<string>('');
 
   // API hooks
+  const { data: campaignsData, isLoading } = useGetEmailCampaigns({
+    page,
+    limit: 10,
+    search,
+    status,
+    group,
+  });
   const sendMassEmailMutation = useSendMassEmail();
-
-  // Simulate loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Skeleton Components
   const TableSkeleton = () => (
@@ -67,10 +53,7 @@ const EmailCampaigns = () => {
           <Table.Th>Recipients</Table.Th>
           <Table.Th>Status</Table.Th>
           <Table.Th>Sent</Table.Th>
-          <Table.Th>Open Rate</Table.Th>
-          <Table.Th>Click Rate</Table.Th>
           <Table.Th>Created</Table.Th>
-          <Table.Th>Actions</Table.Th>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
@@ -92,19 +75,7 @@ const EmailCampaigns = () => {
               <Skeleton height={14} width={60} />
             </Table.Td>
             <Table.Td>
-              <Skeleton height={14} width={40} />
-            </Table.Td>
-            <Table.Td>
-              <Skeleton height={14} width={40} />
-            </Table.Td>
-            <Table.Td>
               <Skeleton height={14} width={80} />
-            </Table.Td>
-            <Table.Td>
-              <Group gap="xs">
-                <Skeleton height={28} width={28} circle />
-                <Skeleton height={28} width={28} circle />
-              </Group>
             </Table.Td>
           </Table.Tr>
         ))}
@@ -112,64 +83,20 @@ const EmailCampaigns = () => {
     </Table>
   );
 
-  const [campaigns, setCampaigns] = useState<EmailCampaign[]>([
-    {
-      id: '1',
-      subject: 'Welcome to our platform!',
-      content: 'Thank you for joining our university social network...',
-      htmlContent: '',
-      recipient: EmailTargetGroup.All,
-      status: 'sent',
-      sentCount: 1245,
-      openRate: 68.5,
-      clickRate: 12.3,
-      createdAt: '2024-03-15',
-    },
-    {
-      id: '2',
-      subject: 'New features available now',
-      content: 'Exciting updates have been released...',
-      htmlContent: '',
-      recipient: EmailTargetGroup.Active,
-      status: 'sent',
-      sentCount: 892,
-      openRate: 72.1,
-      clickRate: 18.7,
-      createdAt: '2024-03-18',
-    },
-    {
-      id: '3',
-      subject: 'Premium features - Special offer',
-      content: 'Upgrade your account and get exclusive benefits...',
-      htmlContent: '',
-      recipient: EmailTargetGroup.Inactive,
-      status: 'scheduled',
-      sentCount: 0,
-      openRate: 0,
-      clickRate: 0,
-      createdAt: '2024-03-20',
-      scheduledAt: '2024-03-22T10:00:00',
-    },
-    {
-      id: '4',
-      subject: 'Monthly newsletter - March 2024',
-      content: 'Here\'s what happened this month...',
-      htmlContent: '',
-      recipient: EmailTargetGroup.All,
-      status: 'draft',
-      sentCount: 0,
-      openRate: 0,
-      clickRate: 0,
-      createdAt: '2024-03-21',
-    },
-  ]);
-
   const recipientGroups = [
-    { value: EmailTargetGroup.All, label: 'All Users', count: 1832 },
-    { value: EmailTargetGroup.Active, label: 'Active Users', count: 1456 },
-    { value: EmailTargetGroup.Expired, label: 'Expired Users', count: 234 },
-    { value: EmailTargetGroup.CompletingProfile, label: 'Completing Profile', count: 142 },
-    { value: EmailTargetGroup.Inactive, label: 'Inactive Users', count: 98 },
+    { value: EmailTargetGroup.All, label: 'All Users' },
+    { value: EmailTargetGroup.Active, label: 'Active Users' },
+    { value: EmailTargetGroup.Expired, label: 'Expired Users' },
+    { value: EmailTargetGroup.CompletingProfile, label: 'Completing Profile' },
+    { value: EmailTargetGroup.Inactive, label: 'Inactive Users' },
+  ];
+
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'scheduled', label: 'Scheduled' },
+    { value: 'sent', label: 'Sent' },
+    { value: 'sending', label: 'Sending' },
   ];
 
   const handleCreateCampaign = () => {
@@ -188,73 +115,6 @@ const EmailCampaigns = () => {
     open();
   };
 
-  const handleEditCampaign = (campaign: EmailCampaign) => {
-    setEditingCampaign(campaign);
-    open();
-  };
-
-  const handleDeleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(campaign => campaign.id !== id));
-  };
-
-  const handleSendCampaign = async (campaign: EmailCampaign) => {
-    if (!campaign.subject.trim() || !campaign.content.trim()) {
-      notifications.show({
-        title: 'Validation Error',
-        message: 'Subject and content are required to send the campaign.',
-        color: 'red',
-      });
-      return;
-    }
-
-    try {
-      // Update campaign status to sending
-      setCampaigns(prev => prev.map(c => 
-        c.id === campaign.id ? { ...c, status: 'sending' as const } : c
-      ));
-
-      const emailData: SendMassEmailDto = {
-        targetGroup: campaign.recipient,
-        subject: campaign.subject,
-        text: campaign.content,
-        html: campaign.htmlContent || campaign.content, // Use HTML content if available, otherwise fallback to text
-      };
-
-      await sendMassEmailMutation.mutateAsync(emailData);
-
-      // Update campaign status to sent
-      setCampaigns(prev => prev.map(c => 
-        c.id === campaign.id 
-          ? { 
-              ...c, 
-              status: 'sent' as const,
-              sentCount: getRecipientCount(campaign.recipient),
-              openRate: Math.random() * 80 + 10, // Mock data
-              clickRate: Math.random() * 25 + 5, // Mock data
-            }
-          : c
-      ));
-
-      notifications.show({
-        title: 'Success',
-        message: `Email campaign sent successfully to ${getRecipientCount(campaign.recipient)} users!`,
-        color: 'green',
-      });
-
-    } catch {
-      // Revert campaign status back to draft on error
-      setCampaigns(prev => prev.map(c => 
-        c.id === campaign.id ? { ...c, status: 'draft' as const } : c
-      ));
-
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to send email campaign. Please try again.',
-        color: 'red',
-      });
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'sent': return 'green';
@@ -269,13 +129,7 @@ const EmailCampaigns = () => {
     return recipientGroups.find(g => g.value === recipient)?.label || recipient;
   };
 
-  const getRecipientCount = (recipient: string) => {
-    return recipientGroups.find(g => g.value === recipient)?.count || 0;
-  };
-
-  const totalSent = campaigns.filter(c => c.status === 'sent').reduce((sum, c) => sum + c.sentCount, 0);
-
-  const rows = campaigns.map((campaign) => (
+  const rows = campaignsData?.data.campaigns.map((campaign) => (
     <Table.Tr key={campaign.id}>
       <Table.Td>
         <div>
@@ -290,37 +144,14 @@ const EmailCampaigns = () => {
         </Badge>
       </Table.Td>
       <Table.Td>{campaign.sentCount > 0 ? campaign.sentCount.toLocaleString() : '-'}</Table.Td>
-      <Table.Td>{campaign.status === 'sent' ? `${campaign.openRate.toFixed(1)}%` : '-'}</Table.Td>
-      <Table.Td>{campaign.status === 'sent' ? `${campaign.clickRate.toFixed(1)}%` : '-'}</Table.Td>
       <Table.Td>{campaign.createdAt}</Table.Td>
-      <Table.Td>
-        <Group gap="xs">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleEditCampaign(campaign)}>
-            <IconEye size={16} />
-          </ActionIcon>
-          {(campaign.status === 'draft' || campaign.status === 'scheduled') && (
-            <ActionIcon 
-              variant="subtle" 
-              color="green" 
-              onClick={() => handleSendCampaign(campaign)}
-              loading={sendMassEmailMutation.isPending}
-              disabled={sendMassEmailMutation.isPending}
-            >
-              <IconSend size={16} />
-            </ActionIcon>
-          )}
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDeleteCampaign(campaign.id)}>
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Group>
-      </Table.Td>
     </Table.Tr>
   ));
 
   return (
     <Stack gap="lg">
       <Group justify="space-between">
-        {loading ? (
+        {isLoading ? (
           <>
             <Skeleton height={32} width={200} />
             <Skeleton height={36} width={140} />
@@ -335,68 +166,58 @@ const EmailCampaigns = () => {
         )}
       </Group>
 
-      {/* Campaign Stats */}
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card padding="lg" radius="md" withBorder>
-            {loading ? (
-              <>
-                <Skeleton height={12} width="60%" mb="xs" />
-                <Skeleton height={28} width="50%" />
-              </>
-            ) : (
-              <>
-                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Total Sent</Text>
-                <Text fw={700} size="xl">{totalSent.toLocaleString()}</Text>
-              </>
-            )}
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card padding="lg" radius="md" withBorder>
-            {loading ? (
-              <>
-                <Skeleton height={12} width="60%" mb="xs" />
-                <Skeleton height={28} width="40%" />
-              </>
-            ) : (
-              <>
-                <Text c="dimmed" size="sm" tt="uppercase" fw={700}>Campaigns</Text>
-                <Text fw={700} size="xl">{campaigns.length}</Text>
-              </>
-            )}
-          </Card>
-        </Grid.Col>
-      </Grid>
-
       <Card padding="lg" radius="md" withBorder>
-        <Group justify="space-between" mb="md">
-          {loading ? (
-            <Skeleton height={16} width={140} />
-          ) : (
-            <Text fw={500}>Campaign History</Text>
-          )}
-        </Group>
+        <Stack gap="md">
+          <Group grow>
+            <Input
+              placeholder="Search campaigns..."
+              leftSection={<IconSearch size={16} />}
+              value={search}
+              onChange={(e) => setSearch(e.currentTarget.value)}
+            />
+            <Select
+              placeholder="Filter by status"
+              data={statusOptions}
+              value={status}
+              onChange={(value: string | null) => setStatus(value || '')}
+              clearable
+            />
+            <Select
+              placeholder="Filter by recipient group"
+              data={recipientGroups}
+              value={group}
+              onChange={(value: string | null) => setGroup(value || '')}
+              clearable
+            />
+          </Group>
 
-        <Table.ScrollContainer minWidth={1000}>
-          {loading ? <TableSkeleton /> : (
-            <Table verticalSpacing="sm">
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Campaign</Table.Th>
-                  <Table.Th>Recipients</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th>Sent</Table.Th>
-                  <Table.Th>Open Rate</Table.Th>
-                  <Table.Th>Click Rate</Table.Th>
-                  <Table.Th>Created</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>{rows}</Table.Tbody>
-            </Table>
+          <Table.ScrollContainer minWidth={1000}>
+            {isLoading ? <TableSkeleton /> : (
+              <Table verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Campaign</Table.Th>
+                    <Table.Th>Recipients</Table.Th>
+                    <Table.Th>Status</Table.Th>
+                    <Table.Th>Sent</Table.Th>
+                    <Table.Th>Created</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{rows}</Table.Tbody>
+              </Table>
+            )}
+          </Table.ScrollContainer>
+
+          {campaignsData && (
+            <Group justify="center">
+              <Pagination
+                value={page}
+                onChange={setPage}
+                total={campaignsData.data.totalPages}
+              />
+            </Group>
           )}
-        </Table.ScrollContainer>
+        </Stack>
       </Card>
 
       {/* Create/Edit Campaign Modal */}
@@ -411,41 +232,50 @@ const EmailCampaigns = () => {
             label="Subject Line"
             placeholder="Enter email subject"
             value={editingCampaign?.subject || ''}
-            onChange={(event) => setEditingCampaign(prev => 
-              prev ? {...prev, subject: event.currentTarget.value} : null
-            )}
+            onChange={(event) => {
+              if (!event.currentTarget) return;
+              console.log("subject", event.target.value);
+              setEditingCampaign(prev => 
+                prev ? {...prev, subject: event.target.value} : prev
+              );
+            }}
           />
 
           <Select
             label="Recipients"
-            description={`Will send to ${getRecipientCount(editingCampaign?.recipient || EmailTargetGroup.All).toLocaleString()} users`}
-            data={recipientGroups.map(group => ({
-              value: group.value,
-              label: group.label
-            }))}
+            data={recipientGroups}
             value={editingCampaign?.recipient || EmailTargetGroup.All}
-            onChange={(value) => setEditingCampaign(prev => 
-              prev ? {...prev, recipient: value as EmailTargetGroup} : null
-            )}
+            onChange={(value: string | null) => {
+              if (!value) return;
+              setEditingCampaign(prev => 
+                prev ? {...prev, recipient: value as EmailTargetGroup} : prev
+              );
+            }}
           />
 
           <Textarea
             label="Email Content (Text)"
             placeholder="Write your email content here..."
             value={editingCampaign?.content || ''}
-            onChange={(event) => setEditingCampaign(prev => 
-              prev ? {...prev, content: event.currentTarget.value} : null
-            )}
+            onChange={(event) => {
+              if (!event.currentTarget) return;
+              setEditingCampaign(prev => 
+                prev ? {...prev, content: event.target.value} : prev
+              );
+            }}
             minRows={4}
           />
 
           <Textarea
-            label="HTML Content (Optional)"
+            label="HTML Content"
             placeholder="Write your HTML content here..."
             value={editingCampaign?.htmlContent || ''}
-            onChange={(event) => setEditingCampaign(prev => 
-              prev ? {...prev, htmlContent: event.currentTarget.value} : null
-            )}
+            onChange={(event) => {
+              if (!event.currentTarget) return;
+              setEditingCampaign(prev => 
+                prev ? {...prev, htmlContent: event.target.value} : prev
+              );
+            }}
             minRows={4}
           />
 
@@ -454,23 +284,42 @@ const EmailCampaigns = () => {
               Cancel
             </Button>
             <Button 
-              onClick={() => {
-                if (editingCampaign?.id) {
-                  // Update existing campaign
-                  setCampaigns(prev => prev.map(c => 
-                    c.id === editingCampaign.id ? editingCampaign : c
-                  ));
+              onClick={async () => {
+                if (!editingCampaign) return;
+
+                if (editingCampaign.id) {
+                  // TODO: Implement update functionality
+                  notifications.show({
+                    title: 'Not Implemented',
+                    message: 'Update functionality is not implemented yet.',
+                    color: 'yellow',
+                  });
                 } else {
-                  // Create new campaign
-                  const newCampaign = {
-                    ...editingCampaign!,
-                    id: Date.now().toString(),
-                  };
-                  setCampaigns(prev => [...prev, newCampaign]);
+                  try {
+                    await sendMassEmailMutation.mutateAsync({
+                      targetGroup: editingCampaign.recipient,
+                      subject: editingCampaign.subject,
+                      text: editingCampaign.content,
+                      html: editingCampaign.htmlContent || editingCampaign.content,
+                    });
+
+                    notifications.show({
+                      title: 'Success',
+                      message: 'Email campaign has been created and queued for sending.',
+                      color: 'green',
+                    });
+                    close();
+                  } catch (error) {
+                    notifications.show({
+                      title: 'Error',
+                      message: error instanceof Error ? error.message : 'Failed to create campaign',
+                      color: 'red',
+                    });
+                  }
                 }
-                close();
               }}
-              disabled={!editingCampaign?.subject.trim() || !editingCampaign?.content.trim()}
+              loading={sendMassEmailMutation.isPending}
+              disabled={!editingCampaign?.subject?.trim() || !editingCampaign?.content?.trim()}
             >
               {editingCampaign?.id ? 'Update' : 'Create'} Campaign
             </Button>

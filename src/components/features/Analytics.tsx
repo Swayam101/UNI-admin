@@ -7,11 +7,10 @@ import {
 } from '@mantine/core';
 import { useDashboardAnalytics } from '../../hooks/useDashboard';
 import {
-  StatsGrid,
   TrendChart,
-  UserStatusChart,
   SchoolPerformanceTable,
 } from './analytics';
+import { DashboardStats } from './dashboard/DashboardStats';
 
 const Analytics = () => {
   const [dateRange, setDateRange] = useState('30');
@@ -25,6 +24,23 @@ const Analytics = () => {
     data: analyticsData, 
     isLoading: isLoadingAnalytics 
   } = useDashboardAnalytics();
+
+  // Map analytics data to match DashboardStats expected structure
+  const dashboardStatsData = analyticsData ? {
+    totalSchools: analyticsData.totalColleges,
+    totalUsers: analyticsData.totalUsers,
+    totalPosts: analyticsData.totalPosts,
+    totalColleges: analyticsData.totalColleges,
+    collegesLastWeek: analyticsData.collegesLastWeek,
+    collegeIncreasePercentage: analyticsData.collegeIncreasePercentage,
+    activeUsers: analyticsData.activeUsers,
+    usersAddedLastWeek: analyticsData.usersAddedLastWeek,
+    postsThisWeek: analyticsData.postsThisWeek,
+    revenue: analyticsData.revenue,
+    signupTrend: analyticsData.signupTrend,
+    postTrend: analyticsData.postTrend,
+    lastMonthRevenue: analyticsData.lastMonthRevenue,
+  } : undefined;
 
   // Simulate loading and staggered animations
   useEffect(() => {
@@ -87,30 +103,14 @@ const Analytics = () => {
         { name: 'Week 4', date: '2024-01-22', signups: 22, posts: 85 },
       ];
 
-  const schoolPerformance = [
-    { name: 'Harvard', signups: 245, posts: 89, revenue: 3400, conversion: 65 },
-    { name: 'Stanford', signups: 198, posts: 76, revenue: 2850, conversion: 58 },
-    { name: 'MIT', signups: 187, posts: 64, revenue: 2650, conversion: 71 },
-    { name: 'Yale', signups: 156, posts: 52, revenue: 2100, conversion: 48 },
-    { name: 'Princeton', signups: 134, posts: 41, revenue: 1800, conversion: 52 },
-  ];
-
-  const userStatusData = [
-    { name: 'Active', value: 1245, color: '#339af0' },
-    { name: 'Inactive', value: 356, color: '#868e96' },
-    { name: 'Pending', value: 89, color: '#ffd43b' },
-    { name: 'Banned', value: 12, color: '#fa5252' },
-  ];
+  const schoolPerformance = analyticsData?.collegePerformance || [];
 
   return (
     <Stack gap="xl">
       <Title order={2}>Analytics Dashboard</Title>
       
       {/* Stats Grid */}
-      <StatsGrid 
-        analyticsData={analyticsData} 
-        statsVisible={statsVisible} 
-      />
+      <DashboardStats data={dashboardStatsData} />
 
       {/* Charts Section */}
       <Transition
@@ -122,7 +122,7 @@ const Analytics = () => {
         {(styles) => (
           <div style={styles}>
             <Grid>
-              <Grid.Col span={{ base: 12, lg: 8 }}>
+              <Grid.Col >
                 <TrendChart
                   data={combinedChartData}
                   dateRange={dateRange}
@@ -131,12 +131,12 @@ const Analytics = () => {
                 />
               </Grid.Col>
               
-              <Grid.Col span={{ base: 12, lg: 4 }}>
+              {/* <Grid.Col span={{ base: 12, lg: 4 }}>
                 <UserStatusChart
                   data={userStatusData}
                   loading={loading}
                 />
-              </Grid.Col>
+              </Grid.Col> */}
             </Grid>
           </div>
         )}

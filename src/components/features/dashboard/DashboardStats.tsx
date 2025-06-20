@@ -3,19 +3,22 @@ import {
   IconSchool,
   IconUsers,
   IconMessages,
-  IconTrendingUp,
+  IconCurrencyDollar,
 } from '@tabler/icons-react';
 import type { Icon } from '@tabler/icons-react';
+import { TrendData } from '../../../types/dashboard';
 
 interface StatCardProps {
   title: string;
   value: string;
+  subtitle: string;
   icon: Icon;
   color: string;
   index: number;
+  revenue: number;
 }
 
-const StatCard = ({ title, value, icon: Icon, color, index }: StatCardProps) => (
+const StatCard = ({ title, value, subtitle, icon: Icon, color, index }: StatCardProps) => (
   <Transition
     mounted={true}
     transition="slide-up"
@@ -50,6 +53,7 @@ const StatCard = ({ title, value, icon: Icon, color, index }: StatCardProps) => 
             <Text
               size="xl"
               fw={700}
+              mb={2}
               style={{
                 background: `linear-gradient(45deg, var(--mantine-color-${color}-6), var(--mantine-color-${color}-8))`,
                 WebkitBackgroundClip: 'text',
@@ -58,6 +62,9 @@ const StatCard = ({ title, value, icon: Icon, color, index }: StatCardProps) => 
               }}
             >
               {value}
+            </Text>
+            <Text size="xs" c="dimmed" fw={400}>
+              {subtitle}
             </Text>
           </div>
           <Icon size={24} color={`var(--mantine-color-${color}-6)`} />
@@ -72,7 +79,16 @@ interface DashboardStatsProps {
     totalSchools: number;
     totalUsers: number;
     totalPosts: number;
-    growthRate: number;
+    totalColleges: number;
+    collegesLastWeek: number;
+    collegeIncreasePercentage: number;
+    activeUsers: number;
+    usersAddedLastWeek: number;
+    postsThisWeek: number;
+    revenue: number;
+    signupTrend: TrendData[];
+    postTrend: TrendData[];
+    lastMonthRevenue: number;
   };
 }
 
@@ -82,31 +98,40 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
     totalUsers: 12847,
     totalPosts: 3521,
     growthRate: 23.5,
+    collegesLastWeek: 8,
+    usersAddedLastWeek: 342,
+    postsThisWeek: 89,
+    revenue: 100000,
+    lastMonthRevenue: 90000,
   };
 
   const statsData = [
     {
       title: 'Total Schools',
       value: stats.totalSchools.toLocaleString(),
+      subtitle: `+${stats.collegesLastWeek || 8} this week`,
       icon: IconSchool,
       color: 'blue',
     },
     {
       title: 'Total Users',
       value: stats.totalUsers.toLocaleString(),
+      subtitle: `+${stats.usersAddedLastWeek || 342} this week`,
       icon: IconUsers,
       color: 'green',
     },
     {
       title: 'Total Posts',
       value: stats.totalPosts.toLocaleString(),
+      subtitle: `+${stats.postsThisWeek || 89} this week`,
       icon: IconMessages,
       color: 'orange',
     },
     {
-      title: 'Growth Rate',
-      value: `${stats.growthRate}%`,
-      icon: IconTrendingUp,
+      title: 'Revenue This Month',
+      value: `$${stats.revenue}`,
+      subtitle: `Last month: $${stats.lastMonthRevenue}`,
+      icon: IconCurrencyDollar,
       color: 'teal',
     },
   ];
@@ -118,11 +143,13 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
           key={stat.title}
           title={stat.title}
           value={stat.value}
+          subtitle={stat.subtitle}
           icon={stat.icon}
           color={stat.color}
           index={index}
+          revenue={stats.revenue}
         />
       ))}
     </SimpleGrid>
   );
-}; 
+};

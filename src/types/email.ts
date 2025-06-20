@@ -3,9 +3,9 @@ import { ApiResponse } from './api';
 export enum EmailTargetGroup {
   All = 'all',
   Active = 'active',
-  Expired = 'expired',
-  CompletingProfile = 'completingProfile',
   Inactive = 'inactive',
+  Expired = 'expired',
+  CompletingProfile = 'completing_profile',
 }
 
 export interface SendMassEmailDto {
@@ -15,4 +15,39 @@ export interface SendMassEmailDto {
   html: string;
 }
 
-export type EmailCampaignResponse = ApiResponse<Record<string, unknown>>; 
+export interface EmailCampaign {
+  id: string;
+  subject: string;
+  content: string;
+  htmlContent: string;
+  recipient: EmailTargetGroup;
+  status: 'draft' | 'scheduled' | 'sent' | 'sending';
+  sentCount: number;
+  openRate: number;
+  clickRate: number;
+  createdAt: string;
+  scheduledAt?: string;
+}
+
+export interface GetEmailCampaignsParams {
+  group?: string;
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface EmailCampaignsResponse extends ApiResponse<{
+  campaigns: EmailCampaign[];
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
+  pagingCounter: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number | null;
+  nextPage: number | null;
+}> {}
+
+export type EmailCampaignResponse = ApiResponse<Record<string, unknown>>;

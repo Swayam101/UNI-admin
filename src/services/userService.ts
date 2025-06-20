@@ -15,7 +15,7 @@ interface GetAllUsersParams {
 const USER_ENDPOINTS = {
   GET_ALL: '/users/getAllUsers',
   GET_BY_ID: (id: string) => `/users/fetchUserById/${id}`,
-  UPDATE_BY_ID: (id: string) => `/users/updateUserById/${id}`,
+  UPDATE_BY_ID: `/users/updateUser`,
 } as const;
 
 export const userService = {
@@ -51,9 +51,14 @@ export const userService = {
 
   // Update user by ID
   updateUserById: async (id: string, data: UpdateUserRequest): Promise<User> => {
-    const response = await apiClient.patch<UserDetailResponse>(
-      USER_ENDPOINTS.UPDATE_BY_ID(id),
-      data
+    const response = await apiClient.put<UserDetailResponse>(
+      USER_ENDPOINTS.UPDATE_BY_ID,
+      data,
+      {
+        params: {
+          userId: id
+        }
+      }
     );
     return response.data;
   },

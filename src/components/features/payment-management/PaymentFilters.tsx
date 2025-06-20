@@ -1,22 +1,20 @@
 import { Group, TextInput, Select } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
+type PaymentType = 'all' | 'post' | 'subscription';
+
 interface PaymentFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  statusFilter: string;
-  onStatusFilterChange: (value: string) => void;
-  typeFilter: string;
-  onTypeFilterChange: (value: string) => void;
+  paymentType: PaymentType;
+  onPaymentTypeChange: (value: PaymentType) => void;
 }
 
 export const PaymentFilters = ({
   searchQuery,
   onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  typeFilter,
-  onTypeFilterChange,
+  paymentType,
+  onPaymentTypeChange,
 }: PaymentFiltersProps) => {
   return (
     <Group gap="md">
@@ -29,32 +27,17 @@ export const PaymentFilters = ({
       />
       
       <Select
-        placeholder="Filter by status"
-        value={statusFilter}
-        onChange={(value) => onStatusFilterChange(value || 'all')}
-        data={[
-          { value: 'all', label: 'All Status' },
-          { value: 'completed', label: 'Completed' },
-          { value: 'pending', label: 'Pending' },
-          { value: 'failed', label: 'Failed' },
-        ]}
-        clearable
-        style={{ minWidth: 150 }}
-      />
-      
-      <Select
         placeholder="Filter by type"
-        value={typeFilter}
-        onChange={(value) => onTypeFilterChange(value || 'all')}
+        value={paymentType}
+        onChange={(value) => onPaymentTypeChange((value || 'all') as PaymentType)}
         data={[
           { value: 'all', label: 'All Types' },
-          { value: 'premium_subscription', label: 'Premium' },
-          { value: 'boost_visibility', label: 'Boost' },
-          { value: 'super_like', label: 'Super Like' },
+          { value: 'post', label: 'Post Payment' },
+          { value: 'subscription', label: 'Subscription' },
         ]}
         clearable
         style={{ minWidth: 150 }}
       />
     </Group>
   );
-}; 
+};

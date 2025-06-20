@@ -270,7 +270,7 @@ const TestimonialManagement = () => {
             </>
           ) : (
             <>
-              <Text fw={500}>Testimonials ({filteredTestimonials.length})</Text>
+              {/* <Text fw={500}>Testimonials ({filteredTestimonials.length})</Text>
               <Group>
                 <TextInput
                   placeholder="Search testimonials..."
@@ -279,7 +279,7 @@ const TestimonialManagement = () => {
                   onChange={(event) => setSearchQuery(event.currentTarget.value)}
                   style={{ width: 300 }}
                 />
-              </Group>
+              </Group> */}
             </>
           )}
         </Group>

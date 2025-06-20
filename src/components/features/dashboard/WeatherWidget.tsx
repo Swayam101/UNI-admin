@@ -6,10 +6,6 @@ import {
   Badge,
   Text,
 } from '@mantine/core';
-import {
-  IconCloudRain,
-} from '@tabler/icons-react';
-import type { Icon } from '@tabler/icons-react';
 
 // Digital Clock Component - Clean Style
 const DigitalClock = ({ time }: { time: Date }) => {
@@ -47,46 +43,6 @@ const DigitalClock = ({ time }: { time: Date }) => {
   );
 };
 
-// Weather Icon Component - Clean Style
-const WeatherIcon = ({ type, size = 16 }: { type: string; size?: number }) => {
-  const iconMap: Record<string, Icon> = {
-    rain: IconCloudRain,
-    // Add more weather types as needed
-  };
-  
-  const IconComponent = iconMap[type] || IconCloudRain;
-  
-  return (
-    <IconComponent 
-      size={size} 
-      color="var(--mantine-color-blue-6)"
-    />
-  );
-};
-
-// Weather Forecast Item Component - Clean Style
-const WeatherForecastItem = ({ 
-  time, 
-  temperature, 
-  weatherType, 
-  isNow = false 
-}: { 
-  time: string; 
-  temperature: number; 
-  weatherType: string; 
-  isNow?: boolean;
-}) => (
-  <Stack align="center" gap="xs">
-    <WeatherIcon type={weatherType} size={20} />
-    <Text fw={600} size="sm" c="blue">
-      {temperature}°C
-    </Text>
-    <Text size="xs" c="dimmed" fw={500}>
-      {isNow ? 'Now' : time}
-    </Text>
-  </Stack>
-);
-
 // Main Weather Widget Component - Clean and Consistent
 export const WeatherWidget = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -99,13 +55,6 @@ export const WeatherWidget = () => {
     
     return () => clearInterval(timer);
   }, []);
-  
-  // Sample weather data
-  const weatherData = [
-    { time: 'Now', temperature: 12, weatherType: 'rain', isNow: true },
-    { time: '14:00', temperature: 11, weatherType: 'rain', isNow: false },
-    { time: '15:00', temperature: 10, weatherType: 'rain', isNow: false },
-  ];
   
   return (
     <Card 
@@ -146,18 +95,7 @@ export const WeatherWidget = () => {
           </Group>
         </Group>
         
-        {/* Weather Section */}
-        <Group gap="lg" justify="center" align="flex-end">
-          {weatherData.map((item, index) => (
-            <WeatherForecastItem
-              key={index}
-              time={item.time}
-              temperature={item.temperature}
-              weatherType={item.weatherType}
-              isNow={item.isNow}
-            />
-          ))}
-        </Group>
+
       </Stack>
     </Card>
   );

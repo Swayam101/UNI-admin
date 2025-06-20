@@ -14,11 +14,24 @@ export interface TrendData {
 
 export interface DashboardAnalytics {
   totalColleges: number;
+  collegesLastWeek: number;
+  collegeIncreasePercentage: number;
   activeUsers: number;
+  usersAddedLastWeek: number;
+  totalUsers: number;
   postsThisWeek: number;
+  totalPosts: number;
   revenue: number;
   signupTrend: TrendData[];
+  lastMonthRevenue: number;
   postTrend: TrendData[];
+  collegePerformance: {
+    _id: string;
+    name: string;
+    logoUrl: string;
+    totalUsers: number;
+    totalPosts: number;
+  }[];
 }
 
 export type RecentActivityResponse = ApiResponse<RecentActivity[]>;

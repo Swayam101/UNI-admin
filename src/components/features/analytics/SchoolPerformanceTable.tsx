@@ -1,11 +1,11 @@
 import { Card, Title, Table, Text, Skeleton, Stack } from '@mantine/core';
 
 interface SchoolData {
+  _id: string;
   name: string;
-  signups: number;
-  posts: number;
-  revenue: number;
-  conversion: number;
+  logoUrl: string;
+  totalUsers: number;
+  totalPosts: number;
 }
 
 interface SchoolPerformanceTableProps {
@@ -41,18 +41,15 @@ const SchoolPerformanceTable = ({ data, loading = false }: SchoolPerformanceTabl
         <Text fw={500}>{school.name}</Text>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{school.signups.toLocaleString()}</Text>
+        <Text size="sm">{school.totalUsers}</Text>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{school.posts}</Text>
+        <Text size="sm">{school.totalPosts}</Text>
       </Table.Td>
       <Table.Td>
         <Text size="sm" fw={500} c="green">
-          ${school.revenue.toLocaleString()}
+          ${school.totalPosts}
         </Text>
-      </Table.Td>
-      <Table.Td>
-        {/* Conversion rate display commented out - remove unused imports */}
       </Table.Td>
     </Table.Tr>
   ));

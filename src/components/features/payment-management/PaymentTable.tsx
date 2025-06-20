@@ -1,58 +1,18 @@
 import {
   Table,
-  Badge,
   Group,
   Text,
   Avatar,
+  Skeleton,
 } from '@mantine/core';
+import { Payment } from '../../../services/transactionService';
 
-interface Payment {
-  id: string;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  userAvatar: string | null;
-  amount: number;
-  currency: string;
-  type: string;
-  status: string;
-  paymentMethod: string;
-  transactionId: string;
-  createdAt: string;
-  description: string;
-  schoolName: string;
-}
 
 interface PaymentTableProps {
   payments: Payment[];
+  isLoading?: boolean;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'completed': return 'green';
-    case 'pending': return 'yellow';
-    case 'failed': return 'red';
-    default: return 'gray';
-  }
-};
-
-const getTypeColor = (type: string) => {
-  switch (type) {
-    case 'premium_subscription': return 'blue';
-    case 'boost_visibility': return 'orange';
-    case 'super_like': return 'pink';
-    default: return 'gray';
-  }
-};
-
-const getTypeLabel = (type: string) => {
-  switch (type) {
-    case 'premium_subscription': return 'Premium';
-    case 'boost_visibility': return 'Boost';
-    case 'super_like': return 'Super Like';
-    default: return type;
-  }
-};
 
 const getPaymentMethodLabel = (method: string) => {
   switch (method) {
@@ -75,7 +35,7 @@ const formatDate = (dateString: string) => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   });
 };
 
@@ -86,7 +46,49 @@ const formatCurrency = (amount: number, currency: string) => {
   }).format(amount);
 };
 
-export const PaymentTable = ({ payments }: PaymentTableProps) => {
+const TableSkeleton = () => (
+  <Table verticalSpacing="sm">
+    <Table.Thead>
+      <Table.Tr>
+        <Table.Th>User</Table.Th>
+        <Table.Th>Amount</Table.Th>
+        <Table.Th>Type</Table.Th>
+        <Table.Th>Status</Table.Th>
+        <Table.Th>Payment Method</Table.Th>
+        <Table.Th>Date</Table.Th>
+        <Table.Th>Transaction ID</Table.Th>
+      </Table.Tr>
+    </Table.Thead>
+    <Table.Tbody>
+      {Array.from({ length: 5 }).map((_, index) => (
+        <Table.Tr key={index}>
+          <Table.Td>
+            <Group gap="sm">
+              <Skeleton height={32} circle />
+              <div>
+                <Skeleton height={12} width={120} mb={4} />
+                <Skeleton height={8} width={180} mb={4} />
+                <Skeleton height={8} width={100} />
+              </div>
+            </Group>
+          </Table.Td>
+          <Table.Td><Skeleton height={12} width={80} /></Table.Td>
+          <Table.Td><Skeleton height={20} width={80} radius="xl" /></Table.Td>
+          <Table.Td><Skeleton height={20} width={80} radius="xl" /></Table.Td>
+          <Table.Td><Skeleton height={12} width={100} /></Table.Td>
+          <Table.Td><Skeleton height={12} width={120} /></Table.Td>
+          <Table.Td><Skeleton height={12} width={150} /></Table.Td>
+        </Table.Tr>
+      ))}
+    </Table.Tbody>
+  </Table>
+);
+
+export const PaymentTable = ({ payments, isLoading = false }: PaymentTableProps) => {
+  if (isLoading) {
+    return <TableSkeleton />;
+  }
+
   return (
     <Table verticalSpacing="sm">
       <Table.Thead>
@@ -94,56 +96,56 @@ export const PaymentTable = ({ payments }: PaymentTableProps) => {
           <Table.Th>User</Table.Th>
           <Table.Th>Amount</Table.Th>
           <Table.Th>Type</Table.Th>
-          <Table.Th>Status</Table.Th>
-          <Table.Th>Payment Method</Table.Th>
+          {/* <Table.Th>Status</Table.Th> */}
+          {/* <Table.Th>Payment Method</Table.Th> */}
           <Table.Th>Date</Table.Th>
           <Table.Th>Transaction ID</Table.Th>
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
         {payments.map((payment) => (
-          <Table.Tr key={payment.id}>
+          <Table.Tr key={payment._id}>
             <Table.Td>
               <Group gap="sm">
                 <Avatar
-                  src={payment.userAvatar}
-                  alt={payment.userName}
+                  src={payment.user.profilePicture}
+                  alt={payment.user.firstName}
                   radius="xl"
                   size="sm"
                 >
-                  {getInitials(payment.userName)}
+                  {getInitials(payment.user.firstName)}
                 </Avatar>
                 <div>
                   <Text size="sm" fw={500}>
-                    {payment.userName}
+                    {payment.user.firstName} {payment.user.lastName}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {payment.userEmail}
+                    {payment.user.email}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {payment.schoolName}
+                    {payment.college.name}
                   </Text>
                 </div>
               </Group>
             </Table.Td>
             <Table.Td>
               <Text fw={500}>
-                {formatCurrency(payment.amount, payment.currency)}
+                {formatCurrency(payment.amount, 'USD')}
               </Text>
             </Table.Td>
-            <Table.Td>
-              <Badge color={getTypeColor(payment.type)} variant="light">
-                {getTypeLabel(payment.type)}
+            {/* <Table.Td>
+              <Badge color={getTypeColor(payment.paymentType)} variant="light">
+                {getTypeLabel(payment.paymentType)}
               </Badge>
-            </Table.Td>
-            <Table.Td>
+            </Table.Td> */}
+            {/* <Table.Td>
               <Badge color={getStatusColor(payment.status)} variant="light">
-                {payment.status}
+                {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
               </Badge>
-            </Table.Td>
+            </Table.Td> */}
             <Table.Td>
               <Text size="sm">
-                {getPaymentMethodLabel(payment.paymentMethod)}
+                {getPaymentMethodLabel(payment.paymentType)}
               </Text>
             </Table.Td>
             <Table.Td>
@@ -153,7 +155,7 @@ export const PaymentTable = ({ payments }: PaymentTableProps) => {
             </Table.Td>
             <Table.Td>
               <Text size="xs" c="dimmed" style={{ fontFamily: 'monospace' }}>
-                {payment.transactionId}
+                {payment.stripePaymentIntentId}
               </Text>
             </Table.Td>
           </Table.Tr>

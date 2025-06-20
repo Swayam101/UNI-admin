@@ -97,7 +97,7 @@ export type CollegeResponse = ApiResponse<College | College[]>;
 
 export type CollegeListResponse = ApiResponse<{
   colleges: College[],
-  total: number,
+  totalDocs: number,
   currentPage: number,
   pages: number
 }>;

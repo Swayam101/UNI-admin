@@ -6,17 +6,12 @@ import {
   Text,
   Badge,
   Button,
-  SimpleGrid,
   Divider,
   Alert,
 } from '@mantine/core';
 import {
   IconAlertCircle,
-  IconBrandInstagram,
-  IconBrandTwitter,
-  IconBrandSnapchat,
   IconCalendar,
-  IconMapPin,
 } from '@tabler/icons-react';
 import type { User } from '../../../types/user';
 
@@ -24,7 +19,7 @@ interface UserDetailsModalProps {
   opened: boolean;
   onClose: () => void;
   user: User | null;
-  onUpdateUserStatus: (id: string, updates: { isApproved?: boolean; isPremium?: boolean }) => void;
+  onUpdateUserStatus: (id: string, updates: { isBanned?: boolean; isSubscribed?: boolean }) => void;
   isUpdating?: boolean;
 }
 
@@ -46,25 +41,16 @@ const UserDetailsModal = ({
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
-  const handleApprovalToggle = () => {
+  const handleBanToggle = () => {
     if (user._id) {
-      onUpdateUserStatus(user._id, { isApproved: !user.isApproved });
+      onUpdateUserStatus(user._id, { isBanned: user.status==="banned" });
     }
   };
 
   const handlePremiumToggle = () => {
     if (user._id) {
-      onUpdateUserStatus(user._id, { isPremium: !user.isPremium });
+      onUpdateUserStatus(user._id, { isSubscribed: !user.isSubscribed });
     }
-  };
-
-  const getLocationDisplay = (location: any) => {
-    if (!location) return 'Not specified';
-    if (typeof location === 'string') return location;
-    if (location.coordinates && Array.isArray(location.coordinates)) {
-      return `${location.coordinates[1]}, ${location.coordinates[0]}`;
-    }
-    return 'Not specified';
   };
 
   return (
@@ -72,7 +58,7 @@ const UserDetailsModal = ({
       opened={opened}
       onClose={onClose}
       title="User Details"
-      size="lg"
+      size="md"
       centered
     >
       <Stack gap="md">
@@ -84,7 +70,7 @@ const UserDetailsModal = ({
             src={user.profilePicture}
             color="blue"
           >
-            {!user.profilePicture && getInitials(user.firstName, user.lastName)}
+            {!user.profilePicture && getInitials(user.firstName || '', user.lastName || '')}
           </Avatar>
           <div style={{ flex: 1 }}>
             <Text size="xl" fw={600}>
@@ -94,11 +80,11 @@ const UserDetailsModal = ({
               {user.email}
             </Text>
             <Group gap="xs">
-              <Badge color={user.isApproved ? 'green' : 'yellow'} variant="light">
-                {user.isApproved ? 'Approved' : 'Pending'}
+              <Badge color={user.status==="banned" ? 'red' : 'green'} variant="light">
+                {user.status==="banned" ? 'Banned' : 'Active'}
               </Badge>
-              <Badge color={user.isPremium ? 'gold' : 'gray'} variant="outline">
-                {user.isPremium ? 'Premium' : 'Free'}
+              <Badge color={user.isSubscribed ? 'gold' : 'gray'} variant="outline">
+                {user.isSubscribed ? 'Premium' : 'Free'}
               </Badge>
               <Badge color="blue" variant="light">
                 {user.role || 'student'}
@@ -109,87 +95,27 @@ const UserDetailsModal = ({
 
         <Divider />
 
-        {/* User Information */}
-        <SimpleGrid cols={2} spacing="md">
-          <div>
-            <Text size="sm" fw={500} c="dimmed" mb={4}>
-              Field of Study
-            </Text>
-            <Text size="sm">{user.studying || 'Not specified'}</Text>
-          </div>
-          
-          <div>
-            <Text size="sm" fw={500} c="dimmed" mb={4}>
-              Graduation Year
-            </Text>
-            <Group gap="xs">
-              <IconCalendar size={16} />
-              <Text size="sm">{user.collegeGraduationYear || 'N/A'}</Text>
-            </Group>
-          </div>
-          
-          <div>
-            <Text size="sm" fw={500} c="dimmed" mb={4}>
-              Location
-            </Text>
-            <Group gap="xs">
-              <IconMapPin size={16} />
-              <Text size="sm">{getLocationDisplay(user.location)}</Text>
-            </Group>
-          </div>
-          
+        {/* Basic User Information */}
+        <Group justify="space-between">
           <div>
             <Text size="sm" fw={500} c="dimmed" mb={4}>
               Join Date
             </Text>
-            <Text size="sm">{formatDate(user.createdAt)}</Text>
+            <Group gap="xs">
+              <IconCalendar size={16} />
+              <Text size="sm">{formatDate(new Date(user.createdAt!).toISOString())}</Text>
+            </Group>
           </div>
-        </SimpleGrid>
-
-        {/* Bio */}
-        {user.bio && (
-          <>
-            <Divider />
-            <div>
-              <Text size="sm" fw={500} c="dimmed" mb={4}>
-                Bio
-              </Text>
-              <Text size="sm">{user.bio}</Text>
-            </div>
-          </>
-        )}
-
-        {/* Social Links */}
-        {(user.instagram || user.twitter || user.snapchat) && (
-          <>
-            <Divider />
-            <div>
-              <Text size="sm" fw={500} c="dimmed" mb={8}>
-                Social Media
-              </Text>
-              <Group gap="md">
-                {user.instagram && (
-                  <Group gap="xs">
-                    <IconBrandInstagram size={16} color="#E4405F" />
-                    <Text size="sm">@{user.instagram}</Text>
-                  </Group>
-                )}
-                {user.twitter && (
-                  <Group gap="xs">
-                    <IconBrandTwitter size={16} color="#1DA1F2" />
-                    <Text size="sm">@{user.twitter}</Text>
-                  </Group>
-                )}
-                {user.snapchat && (
-                  <Group gap="xs">
-                    <IconBrandSnapchat size={16} color="#FFFC00" />
-                    <Text size="sm">@{user.snapchat}</Text>
-                  </Group>
-                )}
-              </Group>
-            </div>
-          </>
-        )}
+          
+          <div>
+            <Text size="sm" fw={500} c="dimmed" mb={4}>
+              User ID
+            </Text>
+            <Text size="sm" style={{ fontFamily: 'monospace' }}>
+              {user._id?.slice(-8) || 'N/A'}
+            </Text>
+          </div>
+        </Group>
 
         {/* Admin Actions */}
         <Divider />
@@ -198,31 +124,32 @@ const UserDetailsModal = ({
             Admin Actions
           </Text>
           
-          {!user.isApproved && (
-            <Alert icon={<IconAlertCircle size={16} />} color="yellow" mb="md">
-              This user is pending approval. Review their information and approve if appropriate.
+          {user.status==="banned" && (
+            <Alert icon={<IconAlertCircle size={16} />} color="red" mb="md">
+              This user is currently banned and cannot access the platform.
             </Alert>
           )}
           
           <Group>
             <Button
-              variant={user.isApproved ? 'light' : 'filled'}
-              color={user.isApproved ? 'red' : 'green'}
-              onClick={handleApprovalToggle}
+              variant={user.status==="banned" ? 'light' : 'filled'}
+              color={user.status==="banned" ? 'green' : 'red'}
+              onClick={handleBanToggle}
               loading={isUpdating}
               disabled={!user._id}
             >
-              {user.isApproved ? 'Revoke Approval' : 'Approve User'}
+              {user.status==="banned" ? 'Unban User' : 'Ban User'}
             </Button>
             
             <Button
               variant={user.isPremium ? 'light' : 'filled'}
               color={user.isPremium ? 'gray' : 'gold'}
+              c={"white"}
               onClick={handlePremiumToggle}
               loading={isUpdating}
               disabled={!user._id}
             >
-              {user.isPremium ? 'Remove Premium' : 'Grant Premium'}
+              {user.isSubscribed ? 'Remove Premium' : 'Grant Premium'}
             </Button>
           </Group>
         </div>
@@ -231,4 +158,4 @@ const UserDetailsModal = ({
   );
 };
 
-export default UserDetailsModal; 
+export default UserDetailsModal;

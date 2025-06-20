@@ -1,16 +1,6 @@
-import { Modal, Stack, Text, Badge, Group } from '@mantine/core';
-
-interface Post {
-  id: string;
-  content: string;
-  author: string;
-  college: string;
-  status: 'scheduled' | 'published' | 'draft' | 'queued';
-  scheduledTime: string;
-  publishedTime: string | null;
-  instagramStatus: 'pending' | 'published' | 'failed';
-  engagement: { likes: number; comments: number };
-}
+import { Modal, Stack, Text, Badge, Group, Image, SimpleGrid, Button } from '@mantine/core';
+import { Post } from '../../../services/postService';
+import { useUpdatePost } from '../../../hooks/usePosts';
 
 interface PostModalProps {
   opened: boolean;
@@ -38,7 +28,23 @@ const getInstagramStatusColor = (status: string) => {
 };
 
 export const PostModal = ({ opened, onClose, post }: PostModalProps) => {
+  const updatePostMutation = useUpdatePost();
+
   if (!post) return null;
+
+  const handleBanToggle = async () => {
+    try {
+      await updatePostMutation.mutateAsync({
+        postId: post._id,
+        postData: {
+          isArchived: !post.isArchived
+        }
+      });
+    } catch (error) {
+      // Error is already handled in the mutation's onError
+      console.error('Ban toggle failed:', error);
+    }
+  };
 
   return (
     <Modal
@@ -46,64 +52,109 @@ export const PostModal = ({ opened, onClose, post }: PostModalProps) => {
       onClose={onClose}
       title="Post Details"
       size="lg"
+      centered
     >
       <Stack gap="md">
         <div>
-          <Text size="sm" c="dimmed" mb={4}>Content</Text>
+          <Text fw={500} mb="xs">Content</Text>
           <Text>{post.content}</Text>
         </div>
 
-        <Group>
+        {post.images && post.images.length > 0 && (
           <div>
-            <Text size="sm" c="dimmed" mb={4}>Author</Text>
-            <Text fw={500}>{post.author}</Text>
+            <Text fw={500} mb="xs">
+              Images ({post.images.length})
+            </Text>
+            <SimpleGrid
+              cols={{ base: 2, sm: 3 }}
+              spacing="sm"
+            >
+              {post.images.map((imageUrl, index) => (
+                <Image
+                  key={index}
+                  src={imageUrl}
+                  alt={`Post image ${index + 1}`}
+                  radius="sm"
+                  fit="cover"
+                  h={120}
+                />
+              ))}
+            </SimpleGrid>
           </div>
+        )}
+
+        <Group justify="space-between">
           <div>
-            <Text size="sm" c="dimmed" mb={4}>College</Text>
-            <Text fw={500}>{post.college}</Text>
+            <Text fw={500}>Author</Text>
+            <Text size="sm">
+              {post.author.firstName} {post.author.lastName}
+            </Text>
+          </div>
+
+          <div>
+            <Text fw={500}>College</Text>
+            <Text size="sm">{post.college.name}</Text>
           </div>
         </Group>
 
-        <Group>
+        <Group justify="space-between">
           <div>
-            <Text size="sm" c="dimmed" mb={4}>Status</Text>
-            <Badge color={getStatusColor(post.status)} variant="light">
-              {post.status}
+            <Text fw={500} mb="xs">Status</Text>
+            <Badge 
+              color={getStatusColor(post.isPublished ? 'published' : 'draft')} 
+              variant="light"
+            >
+              {post.isPublished ? 'Published' : 'Draft'}
             </Badge>
           </div>
-          <div>
-            <Text size="sm" c="dimmed" mb={4}>Instagram Status</Text>
-            <Badge color={getInstagramStatusColor(post.instagramStatus)} variant="light">
-              {post.instagramStatus}
-            </Badge>
-          </div>
-        </Group>
 
-        <Group>
           <div>
-            <Text size="sm" c="dimmed" mb={4}>Scheduled Time</Text>
-            <Text>{post.scheduledTime ? new Date(post.scheduledTime).toLocaleString() : 'Not scheduled'}</Text>
+            <Text fw={500} mb="xs">Instagram Status</Text>
+            <Badge 
+              color={getInstagramStatusColor(post.isPostedToInstagram ? 'published' : 'pending')} 
+              variant="light"
+            >
+              {post.isPostedToInstagram ? 'Posted' : 'Not Posted'}
+            </Badge>
           </div>
-          {post.publishedTime && (
-            <div>
-              <Text size="sm" c="dimmed" mb={4}>Published Time</Text>
-              <Text>{new Date(post.publishedTime).toLocaleString()}</Text>
-            </div>
-          )}
+
+          <div>
+            <Text fw={500} mb="xs">Post Status</Text>
+            <Badge 
+              color={getStatusColor(post.isArchived ? 'banned' : 'active')} 
+              variant="light"
+            >
+              {post.isArchived ? 'Banned' : 'Active'}
+            </Badge>
+          </div>
         </Group>
 
         <div>
-          <Text size="sm" c="dimmed" mb={4}>Engagement</Text>
-          <Group gap="lg">
-            <Text size="sm">
-              <Text component="span" fw={500}>{post.engagement.likes}</Text> likes
-            </Text>
-            <Text size="sm">
-              <Text component="span" fw={500}>{post.engagement.comments}</Text> comments
-            </Text>
-          </Group>
+          <Text fw={500}>Scheduled Time</Text>
+          <Text size="sm">
+            {post.scheduledAt ? new Date(post.scheduledAt).toLocaleString() : 'Not scheduled'}
+          </Text>
         </div>
+
+        {post.scheduledAt && (
+          <div>
+            <Text fw={500}>Published Time</Text>
+            <Text size="sm">{new Date(post.scheduledAt).toLocaleString()}</Text>
+          </div>
+        )}
+
+        {/* Ban/Unban Button */}
+        <Group justify="flex-end" mt="md">
+          <Button
+            variant="outline"
+            color={post.isArchived ? 'green' : 'red'}
+            onClick={handleBanToggle}
+            loading={updatePostMutation.isPending}
+          >
+            {post.isArchived ? 'Unban Post' : 'Ban Post'}
+          </Button>
+        </Group>
       </Stack>
     </Modal>
   );
-}; 
+};
