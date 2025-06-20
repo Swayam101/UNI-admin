@@ -1,9 +1,10 @@
 import apiClient from '../lib/api';
+import { ApiResponse } from '../types/api';
 import type { 
   SendMassEmailDto,
   EmailCampaignResponse,
   GetEmailCampaignsParams,
-  EmailCampaignsResponse
+  EmailCampaign,
 } from '../types/email';
 
 const EMAIL_ENDPOINTS = {
@@ -22,8 +23,30 @@ export const emailService = {
   },
 
   // Get all email campaigns with pagination
-  getAllEmailCampaigns: async (params: GetEmailCampaignsParams): Promise<EmailCampaignsResponse> => {
-    const response = await apiClient.get<EmailCampaignsResponse>(
+  getAllEmailCampaigns: async (params: GetEmailCampaignsParams): Promise<ApiResponse<{
+    campaigns: EmailCampaign[];
+    totalDocs: number;
+    limit: number;
+    totalPages: number;
+    page: number;
+    pagingCounter: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number | null;
+    nextPage: number | null;
+  }>> => {
+    const response = await apiClient.get<ApiResponse<{
+      campaigns: EmailCampaign[];
+      totalDocs: number;
+      limit: number;
+      totalPages: number;
+      page: number;
+      pagingCounter: number;
+      hasPrevPage: boolean;
+      hasNextPage: boolean;
+      prevPage: number | null;
+      nextPage: number | null;
+    }>>(
       EMAIL_ENDPOINTS.GET_CAMPAIGNS,
       { params }
     );

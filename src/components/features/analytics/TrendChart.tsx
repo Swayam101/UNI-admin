@@ -1,4 +1,4 @@
-import { Card, Title, Group, Select, Skeleton } from '@mantine/core';
+import { Card, Title, Group, Skeleton } from '@mantine/core';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface ChartDataPoint {
@@ -15,7 +15,7 @@ interface TrendChartProps {
   loading?: boolean;
 }
 
-const TrendChart = ({ data, dateRange, onDateRangeChange, loading = false }: TrendChartProps) => {
+const TrendChart = ({ data,   loading = false }: TrendChartProps) => {
   const ChartSkeleton = () => (
     <Card padding="lg" radius="md" withBorder>
       <Group justify="space-between" mb="md">

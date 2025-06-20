@@ -9,8 +9,9 @@ import type {
   SendMassEmailDto,
   EmailCampaignResponse,
   GetEmailCampaignsParams,
-  EmailCampaignsResponse
+  EmailCampaign,
 } from '../types/email';
+import { ApiResponse } from '../types/api';
 
 // Query key factory
 const emailKeys = {
@@ -19,7 +20,18 @@ const emailKeys = {
 };
 
 // Hook for fetching campaigns
-export const useGetEmailCampaigns = (params: GetEmailCampaignsParams): UseQueryResult<EmailCampaignsResponse, Error> => {
+export const useGetEmailCampaigns = (params: GetEmailCampaignsParams): UseQueryResult<ApiResponse<{
+  campaigns: EmailCampaign[];
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
+  pagingCounter: number;
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  prevPage: number | null;
+  nextPage: number | null;
+}>, Error> => {
   return useQuery({
     queryKey: emailKeys.campaigns(params),
     queryFn: () => emailService.getAllEmailCampaigns(params),

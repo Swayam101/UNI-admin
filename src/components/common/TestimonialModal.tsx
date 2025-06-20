@@ -99,7 +99,7 @@ const TestimonialModal = ({ opened, onClose, user }: TestimonialModalProps) => {
           <Paper p="md" bg="gray.0" radius="md">
             <Group>
               <Avatar size={50} radius="xl" src={user.profilePicture} color="blue">
-                {!user.profilePicture && getInitials(user.firstName, user.lastName)}
+                {!user.profilePicture && getInitials(user.firstName || '', user.lastName || '')}
               </Avatar>
               <div>
                 <Text fw={600} size="lg">
@@ -108,9 +108,9 @@ const TestimonialModal = ({ opened, onClose, user }: TestimonialModalProps) => {
                 <Text c="dimmed" size="sm">
                   {user.email}
                 </Text>
-                {user.studying && (
+                {user.major && (
                   <Text c="dimmed" size="xs">
-                    {user.studying} • {user.collegeGraduationYear || 'N/A'}
+                    {user.major} • {user.collegeGraduationYear || 'N/A'}
                   </Text>
                 )}
               </div>

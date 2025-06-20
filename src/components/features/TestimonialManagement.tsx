@@ -6,7 +6,6 @@ import {
   Button,
   Group,
   Stack,
-  TextInput,
   ActionIcon,
   Text,
   Avatar,
@@ -19,7 +18,6 @@ import {
 } from '@mantine/core';
 import {
   IconEye,
-  IconSearch,
   IconAlertCircle,
   IconMessageDots,
   IconCalendar,
@@ -36,7 +34,8 @@ const TestimonialManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
+  console.log(setSearchQuery);
+  
   // API hooks
   const { data: testimonialData, isLoading, error, refetch } = useTestimonials();
   const deleteTestimonialMutation = useDeleteTestimonial();
