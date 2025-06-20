@@ -15,8 +15,6 @@ import { Post } from '../../../services/postService';
 interface PostTableProps {
   posts: Post[];
   onViewPost: (post: Post) => void;
-  // onDeletePost: (id: string) => void;
-  // onUpdatePostStatus: (id: string, newStatus: 'scheduled' | 'published' | 'draft' | 'queued') => void;
 }
 
 const getStatusColor = (status: string) => {

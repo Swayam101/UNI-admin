@@ -40,6 +40,7 @@ export const PostModal = ({ opened, onClose, post }: PostModalProps) => {
           isArchived: !post.isArchived
         }
       });
+      onClose();
     } catch (error) {
       // Error is already handled in the mutation's onError
       console.error('Ban toggle failed:', error);

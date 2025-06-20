@@ -34,7 +34,7 @@ const TrendChart = ({ data, dateRange, onDateRangeChange, loading = false }: Tre
     <Card padding="lg" radius="md" withBorder>
       <Group justify="space-between" mb="md">
         <Title order={3}>Trend Analysis</Title>
-        <Select
+        {/* <Select
           value={dateRange}
           onChange={(value) => onDateRangeChange(value || '30')}
           data={[
@@ -45,7 +45,7 @@ const TrendChart = ({ data, dateRange, onDateRangeChange, loading = false }: Tre
           ]}
           size="sm"
           w={140}
-        />
+        /> */}
       </Group>
       
       <ResponsiveContainer width="100%" height={300}>
