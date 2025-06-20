@@ -2,7 +2,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosE
 import { ApiError } from '../types/auth';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api/v1';
+const API_BASE_URL = 'https://api.incomingclass.com/api/v1';
 const TOKEN_KEY = 'auth_token';
 
 // Create axios instance
