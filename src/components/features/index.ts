@@ -7,6 +7,7 @@ export { default as UserManagement } from './UserManagement';
 export { default as SchoolManagement } from './SchoolManagement';
 export { default as PaymentManagement } from './PaymentManagement';
 export { default as PostManagement } from './PostManagement';
+export { default as ContactManagement } from './ContactManagement';
 
 // College form sub-components
 export * from './college-form';

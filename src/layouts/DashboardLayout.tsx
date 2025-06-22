@@ -26,6 +26,7 @@ import {
   IconChevronDown,
   IconCreditCard,
   IconMessageDots,
+  IconAddressBook,
 } from '@tabler/icons-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../hooks/useTheme';
@@ -49,6 +50,7 @@ const DashboardLayout = () => {
     { icon: IconMail, label: 'Email Campaigns', path: '/emails' },
     { icon: IconCreditCard, label: 'Payment Management', path: '/payments' },
     { icon: IconMessageDots, label: 'Testimonial Management', path: '/testimonials' },
+    { icon: IconAddressBook, label: 'Contact Management', path: '/contacts' },
   ];
 
   const getCurrentPageTitle = () => {

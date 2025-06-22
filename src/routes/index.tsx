@@ -9,7 +9,8 @@ import {
   Analytics, 
   EmailCampaigns, 
   PaymentManagement, 
-  TestimonialManagement 
+  TestimonialManagement,
+  ContactManagement 
 } from '../components/features';
 
 export const AppRoutes = () => {
@@ -41,6 +42,7 @@ export const DashboardRoutes = () => {
       <Route path="/emails" element={<EmailCampaigns />} />
       <Route path="/payments" element={<PaymentManagement />} />
       <Route path="/testimonials" element={<TestimonialManagement />} />
+      <Route path="/contacts" element={<ContactManagement />} />
     </Routes>
   );
 }; 
