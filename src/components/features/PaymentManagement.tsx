@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Stack, Title, Card, Table, Text, Loader, Center, Button, Group, Modal, NumberInput } from '@mantine/core';
-import { IconSettings } from '@tabler/icons-react';
+import { Stack, Title, Card, Table, Text, Loader, Center, Button, Group, Modal, NumberInput, Badge, Box, List, ThemeIcon, Divider } from '@mantine/core';
+import { IconSettings, IconCheck } from '@tabler/icons-react';
 import { useDisclosure, useDebouncedValue } from '@mantine/hooks';
 import { PaymentStats } from './payment-management/PaymentStats';
 import { PaymentFilters } from './payment-management/PaymentFilters';
@@ -17,17 +17,18 @@ const PaymentManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pricingOpened, { open: openPricing, close: closePricing }] = useDisclosure(false);
 
-  // Pricing settings
-  const [postPrice, setPostPrice] = useState(10);
-  const [premiumPrice, setPremiumPrice] = useState(50);
+  // Pricing settings - updated defaults to match new pricing
+  const [starterPackPrice, setStarterPackPrice] = useState(5.99);
+  const [premiumPackPrice, setPremiumPackPrice] = useState(9.99);
 
   const updatePricingMutation = useUpdatePricing();
 
   const handleSavePricing = async () => {
     try {
+      // Still use the same API structure but with updated values
       await updatePricingMutation.mutateAsync({
-        post: postPrice,
-        premium: premiumPrice,
+        post: starterPackPrice,
+        premium: premiumPackPrice,
       });
       closePricing();
     } catch (error) {
@@ -56,6 +57,23 @@ const PaymentManagement = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, paymentType]);
+
+  const starterFeatures = [
+    'Submit 1 post to Instagram + website feed',
+    'View your own post + 10 other student profiles',
+    'No filters available',
+    'No AI matching',
+    'No expedited posting',
+    'After 10 profile views, upgrade prompt appears'
+  ];
+
+  const premiumFeatures = [
+    'Expedited posting (moved to front of queue)',
+    'Unlimited profile views',
+    'Unlimited posts',
+    'AI-powered roommate matching enabled',
+    'Full filter access (major, vibe, interests, dorm, etc.)'
+  ];
 
   return (
     <Stack gap="lg">
@@ -105,33 +123,88 @@ const PaymentManagement = () => {
         </Stack>
       </Card>
 
-      {/* Pricing Modal */}
+      {/* Updated Pricing Modal */}
       <Modal
         opened={pricingOpened}
         onClose={closePricing}
         title="Pricing Settings"
-        size="md"
+        size="lg"
       >
-        <Stack gap="md">
-          <NumberInput
-            label="Post Price"
-            description="Price per post in USD"
-            value={postPrice}
-            onChange={(value) => setPostPrice(Number(value))}
-            min={0}
-            decimalScale={2}
-            prefix="$"
-          />
+        <Stack gap="lg">
+          {/* Starter Pack Section */}
+          <Box>
+            <Group justify="space-between" align="flex-start" mb="sm">
+              <div>
+                <Title order={4} c="blue">Tier 1: Starter Plan</Title>
+                <Text size="sm" c="dimmed">Perfect for getting started</Text>
+              </div>
+              <NumberInput
+                label="Price (USD/month)"
+                value={starterPackPrice}
+                onChange={(value) => setStarterPackPrice(Number(value))}
+                min={0}
+                decimalScale={2}
+                prefix="$"
+                w={150}
+              />
+            </Group>
+            
+            <Text fw={500} mb="xs">Features included:</Text>
+            <List
+              spacing="xs"
+              size="sm"
+              center
+              icon={
+                <ThemeIcon color="blue" size={18} radius="xl">
+                  <IconCheck size={12} />
+                </ThemeIcon>
+              }
+            >
+              {starterFeatures.map((feature, index) => (
+                <List.Item key={index}>{feature}</List.Item>
+              ))}
+            </List>
+          </Box>
 
-          <NumberInput
-            label="Premium Price"
-            description="Premium subscription price in USD"
-            value={premiumPrice}
-            onChange={(value) => setPremiumPrice(Number(value))}
-            min={0}
-            decimalScale={2}
-            prefix="$"
-          />
+          <Divider />
+
+          {/* Premium Pack Section */}
+          <Box>
+            <Group justify="space-between" align="flex-start" mb="sm">
+              <div>
+                <Group align="center" gap="xs">
+                  <Title order={4} c="orange">Tier 2: Premium Match+</Title>
+                  <Badge color="orange" size="sm">Most Popular</Badge>
+                </Group>
+                <Text size="sm" c="dimmed">Full access with AI matching</Text>
+              </div>
+              <NumberInput
+                label="Price (USD/month)"
+                value={premiumPackPrice}
+                onChange={(value) => setPremiumPackPrice(Number(value))}
+                min={0}
+                decimalScale={2}
+                prefix="$"
+                w={150}
+              />
+            </Group>
+            
+            <Text fw={500} mb="xs">Features included:</Text>
+            <List
+              spacing="xs"
+              size="sm"
+              center
+              icon={
+                <ThemeIcon color="orange" size={18} radius="xl">
+                  <IconCheck size={12} />
+                </ThemeIcon>
+              }
+            >
+              {premiumFeatures.map((feature, index) => (
+                <List.Item key={index}>{feature}</List.Item>
+              ))}
+            </List>
+          </Box>
 
           <Group justify="flex-end" mt="md">
             <Button variant="outline" onClick={closePricing}>
@@ -140,6 +213,7 @@ const PaymentManagement = () => {
             <Button 
               onClick={handleSavePricing}
               loading={updatePricingMutation.isPending}
+              color="orange"
             >
               Save Pricing
             </Button>
