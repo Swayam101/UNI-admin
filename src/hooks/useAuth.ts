@@ -75,7 +75,10 @@ export const useLogout = () => {
 export const useCurrentUser = () => {
   return useQuery({
     queryKey: authKeys.user(),
-    queryFn: () => AuthService.getCurrentUser(),
+    queryFn: async () => {
+      const response = await AuthService.getCurrentUser();
+      return response.user; // Extract user from the response object
+    },
     enabled: isAuthenticated(), // Only run if user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {

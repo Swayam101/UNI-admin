@@ -83,9 +83,9 @@ export class AuthService {
   /**
    * Get current user profile
    */
-  static async getCurrentUser(): Promise<User> {
+  static async getCurrentUser(): Promise<{user: User}> {
     try {
-      const response = await apiClient.get<ApiResponse<User>>('/auth/me');
+      const response = await apiClient.get<ApiResponse<{user: User}>>('/auth/me');
       console.log("getting user data", response);
       
       // Handle the API response format

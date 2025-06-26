@@ -20,6 +20,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     isError 
   } = useCurrentUser();
 
+  
+
   // Clear tokens and redirect if there's an authentication error
   useEffect(() => {
     if (isError) {

@@ -6,6 +6,7 @@ import {
   IconCurrencyDollar,
 } from '@tabler/icons-react';
 import type { Icon } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { TrendData } from '../../../types/dashboard';
 
 interface StatCardProps {
@@ -16,63 +17,79 @@ interface StatCardProps {
   color: string;
   index: number;
   revenue: number;
+  link?: string;
 }
 
-const StatCard = ({ title, value, subtitle, icon: Icon, color, index }: StatCardProps) => (
-  <Transition
-    mounted={true}
-    transition="slide-up"
-    duration={500}
-    timingFunction="ease"
-    enterDelay={index * 100}
-  >
-    {(styles) => (
-      <Card
-        padding="lg"
-        radius="md"
-        withBorder
-        style={{
-          ...styles,
-          cursor: 'pointer',
-          transition: 'all 0.3s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.12)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '';
-        }}
-      >
-        <Group justify="apart" align="flex-start">
-          <div style={{ flex: 1 }}>
-            <Text size="sm" c="dimmed" fw={500} mb={4}>
-              {title}
-            </Text>
-            <Text
-              size="xl"
-              fw={700}
-              mb={2}
-              style={{
-                background: `linear-gradient(45deg, var(--mantine-color-${color}-6), var(--mantine-color-${color}-8))`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              {value}
-            </Text>
-            <Text size="xs" c="dimmed" fw={400}>
-              {subtitle}
-            </Text>
-          </div>
-          <Icon size={24} color={`var(--mantine-color-${color}-6)`} />
-        </Group>
-      </Card>
-    )}
-  </Transition>
-);
+const StatCard = ({ title, value, subtitle, icon: Icon, color, index, link }: StatCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (link) {
+      navigate(link);
+    }
+  };
+
+  return (
+    <Transition
+      mounted={true}
+      transition="slide-up"
+      duration={500}
+      timingFunction="ease"
+      enterDelay={index * 100}
+    >
+      {(styles) => (
+        <Card
+          padding="lg"
+          radius="md"
+          withBorder
+          style={{
+            ...styles,
+            cursor: link ? 'pointer' : 'default',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            if (link) {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.12)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (link) {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '';
+            }
+          }}
+          onClick={handleClick}
+        >
+          <Group justify="apart" align="flex-start">
+            <div style={{ flex: 1 }}>
+              <Text size="sm" c="dimmed" fw={500} mb={4}>
+                {title}
+              </Text>
+              <Text
+                size="xl"
+                fw={700}
+                mb={2}
+                style={{
+                  background: `linear-gradient(45deg, var(--mantine-color-${color}-6), var(--mantine-color-${color}-8))`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                {value}
+              </Text>
+              <Text size="xs" c="dimmed" fw={400}>
+                {subtitle}
+              </Text>
+            </div>
+            <Icon size={24} color={`var(--mantine-color-${color}-6)`} />
+          </Group>
+        </Card>
+      )}
+    </Transition>
+  );
+};
 
 interface DashboardStatsProps {
   data?: {
@@ -112,6 +129,7 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
       subtitle: `+${stats.collegesLastWeek || 8} this week`,
       icon: IconSchool,
       color: 'blue',
+      link: '/schools',
     },
     {
       title: 'Total Users',
@@ -119,6 +137,7 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
       subtitle: `+${stats.usersAddedLastWeek || 342} this week`,
       icon: IconUsers,
       color: 'green',
+      link: '/users',
     },
     {
       title: 'Total Posts',
@@ -126,6 +145,7 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
       subtitle: `+${stats.postsThisWeek || 89} this week`,
       icon: IconMessages,
       color: 'orange',
+      link: '/posts',
     },
     {
       title: 'Revenue This Month',
@@ -133,6 +153,7 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
       subtitle: `Last month: $${stats.lastMonthRevenue}`,
       icon: IconCurrencyDollar,
       color: 'teal',
+      link: '/payments',
     },
   ];
 
@@ -148,6 +169,7 @@ export const DashboardStats = ({ data }: DashboardStatsProps) => {
           color={stat.color}
           index={index}
           revenue={stats.revenue}
+          link={stat.link}
         />
       ))}
     </SimpleGrid>
