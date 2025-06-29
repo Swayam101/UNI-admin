@@ -158,6 +158,23 @@ export class PostService {
   }
 
   /**
+   * Get Instagram posting window configuration
+   */
+  static async getInstagramWindow(): Promise<ApiResponse<InstagramWindowConfig>> {
+    try {
+      const response = await apiClient.get<ApiResponse<InstagramWindowConfig>>(
+        '/users/instagram-window'
+      );
+      
+      console.log("Instagram window fetched:", response);
+      return response;
+    } catch (error) {
+      console.error('Get Instagram window error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Update Instagram posting window configuration
    */
   static async updateInstagramWindow(data: UpdateInstagramWindowRequest): Promise<ApiResponse<InstagramWindowConfig>> {

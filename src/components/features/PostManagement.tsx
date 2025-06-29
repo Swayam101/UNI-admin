@@ -20,7 +20,7 @@ import {
   PostModal,
   PostTableSkeleton,
 } from './post-management';
-import { useGetAllPosts, useUpdateInstagramWindow } from '../../hooks/usePosts';
+import { useGetAllPosts, useGetInstagramWindow, useUpdateInstagramWindow } from '../../hooks/usePosts';
 import { Post } from '../../services/postService';
 
 const PostManagement = () => {
@@ -37,6 +37,8 @@ const PostManagement = () => {
     search: searchQuery,
   });
 
+  const { data: instagramWindowData, isLoading: isInstagramWindowLoading } = useGetInstagramWindow();
+
   const { posts } = useMemo(() => {
     if (!postsData) return { posts: [] };
 
@@ -52,6 +54,16 @@ const PostManagement = () => {
     }, 1200);
     return () => clearTimeout(timer);
   }, []);
+
+  // Prefill form data when Instagram window data loads
+  useEffect(() => {
+    if (instagramWindowData?.data) {
+      const config = instagramWindowData.data;
+      setStartTime(config.instagramPostWindowStart);
+      setEndTime(config.instagramPostWindowEnd);
+      setPostInterval(config.instagramPostFrequencyInMinutes);
+    }
+  }, [instagramWindowData]);
 
   // Global posting settings
   const [autoPostingEnabled, setAutoPostingEnabled] = useState(true);
@@ -133,6 +145,7 @@ const PostManagement = () => {
             description="Automatically post scheduled content"
             checked={autoPostingEnabled}
             onChange={(event) => setAutoPostingEnabled(event.currentTarget.checked)}
+            disabled={isInstagramWindowLoading}
           />
 
           <Grid>
@@ -144,6 +157,7 @@ const PostManagement = () => {
                 onChange={(value) => setStartTime(Number(value))}
                 min={0}
                 max={23}
+                disabled={isInstagramWindowLoading}
               />
             </Grid.Col>
             <Grid.Col span={6}>
@@ -154,6 +168,7 @@ const PostManagement = () => {
                 onChange={(value) => setEndTime(Number(value))}
                 min={0}
                 max={23}
+                disabled={isInstagramWindowLoading}
               />
             </Grid.Col>
           </Grid>
@@ -165,6 +180,7 @@ const PostManagement = () => {
             onChange={(value) => setPostInterval(Number(value))}
             min={5}
             max={1440}
+            disabled={isInstagramWindowLoading}
           />
 
           <Group justify="flex-end" mt="md">
@@ -173,7 +189,8 @@ const PostManagement = () => {
             </Button>
             <Button 
               onClick={handleSaveSettings}
-              loading={updateInstagramWindowMutation.isPending}
+              loading={updateInstagramWindowMutation.isPending || isInstagramWindowLoading}
+              disabled={isInstagramWindowLoading}
             >
               Save Settings
             </Button>

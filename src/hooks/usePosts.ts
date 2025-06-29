@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PostService, GetPostsParams, UpdatePostRequest, UpdateInstagramWindowRequest, UpdatePricingRequest } from '../services/postService';
+import { PostService, GetPostsParams, UpdatePostRequest, UpdateInstagramWindowRequest, UpdatePricingRequest, InstagramWindowConfig } from '../services/postService';
 import { notifications } from '@mantine/notifications';
 
 // Query keys for caching
@@ -7,6 +7,7 @@ export const postKeys = {
   all: ['posts'] as const,
   lists: () => [...postKeys.all, 'list'] as const,
   list: (params: GetPostsParams) => [...postKeys.lists(), params] as const,
+  instagramWindow: ['posts', 'instagram-window'] as const,
 };
 
 /**
@@ -51,6 +52,18 @@ export const useUpdatePost = () => {
 };
 
 /**
+ * Hook to get Instagram posting window configuration
+ */
+export const useGetInstagramWindow = () => {
+  return useQuery({
+    queryKey: postKeys.instagramWindow,
+    queryFn: () => PostService.getInstagramWindow(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+/**
  * Hook to update Instagram posting window configuration
  */
 export const useUpdateInstagramWindow = () => {
@@ -62,6 +75,8 @@ export const useUpdateInstagramWindow = () => {
     onSuccess: () => {
       // Invalidate and refetch posts lists since posting schedule might affect them
       queryClient.invalidateQueries({ queryKey: postKeys.all });
+      // Invalidate Instagram window settings cache
+      queryClient.invalidateQueries({ queryKey: postKeys.instagramWindow });
       
       notifications.show({
         title: 'Settings Updated',
