@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PostService, GetPostsParams, UpdatePostRequest, UpdateInstagramWindowRequest, UpdatePricingRequest, InstagramWindowConfig } from '../services/postService';
+import { PostService, GetPostsParams, UpdatePostRequest, UpdateInstagramWindowRequest, UpdatePricingRequest } from '../services/postService';
 import { notifications } from '@mantine/notifications';
 
 // Query keys for caching
@@ -27,12 +27,12 @@ export const useUpdatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ postId, postData }: { postId: string; postData: UpdatePostRequest }) => 
+    mutationFn: ({ postId, postData }: { postId: string; postData: UpdatePostRequest }) =>
       PostService.updatePost(postId, postData),
     onSuccess: () => {
       // Invalidate and refetch posts lists
       queryClient.invalidateQueries({ queryKey: postKeys.all });
-      
+
       notifications.show({
         title: 'Post Updated',
         message: 'Post has been successfully updated',
@@ -41,7 +41,7 @@ export const useUpdatePost = () => {
     },
     onError: (error: unknown) => {
       console.error('Update post error:', error);
-      
+
       notifications.show({
         title: 'Update Failed',
         message: 'Failed to update the post. Please try again.',
@@ -70,14 +70,14 @@ export const useUpdateInstagramWindow = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateInstagramWindowRequest) => 
+    mutationFn: (data: UpdateInstagramWindowRequest) =>
       PostService.updateInstagramWindow(data),
     onSuccess: () => {
       // Invalidate and refetch posts lists since posting schedule might affect them
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       // Invalidate Instagram window settings cache
       queryClient.invalidateQueries({ queryKey: postKeys.instagramWindow });
-      
+
       notifications.show({
         title: 'Settings Updated',
         message: 'Instagram posting window settings have been updated successfully',
@@ -86,7 +86,7 @@ export const useUpdateInstagramWindow = () => {
     },
     onError: (error: unknown) => {
       console.error('Update Instagram window error:', error);
-      
+
       notifications.show({
         title: 'Update Failed',
         message: 'Failed to update Instagram posting settings. Please try again.',
@@ -103,12 +103,12 @@ export const useUpdatePricing = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdatePricingRequest) => 
+    mutationFn: (data: UpdatePricingRequest) =>
       PostService.updatePricing(data),
     onSuccess: () => {
       // Invalidate and refetch posts lists since pricing might affect them
       queryClient.invalidateQueries({ queryKey: postKeys.all });
-      
+
       notifications.show({
         title: 'Pricing Updated',
         message: 'Pricing settings have been updated successfully',
@@ -117,7 +117,7 @@ export const useUpdatePricing = () => {
     },
     onError: (error: unknown) => {
       console.error('Update pricing error:', error);
-      
+
       notifications.show({
         title: 'Update Failed',
         message: 'Failed to update pricing settings. Please try again.',
