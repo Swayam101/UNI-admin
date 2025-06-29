@@ -43,7 +43,7 @@ const UserDetailsModal = ({
 
   const handleBanToggle = () => {
     if (user._id) {
-      onUpdateUserStatus(user._id, { isBanned: user.status==="banned" });
+      onUpdateUserStatus(user._id, { isBanned: user.status!=="banned" });
     }
   };
 
@@ -142,8 +142,8 @@ const UserDetailsModal = ({
             </Button>
             
             <Button
-              variant={user.isPremium ? 'light' : 'filled'}
-              color={user.isPremium ? 'gray' : 'gold'}
+              variant={user.isSubscribed ? 'light' : 'filled'}
+              color={user.isSubscribed ? 'gray' : 'gold'}
               c={"white"}
               onClick={handlePremiumToggle}
               loading={isUpdating}

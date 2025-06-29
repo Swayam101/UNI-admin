@@ -9,7 +9,6 @@ import {
 } from '@mantine/core';
 import {
   IconEye,
-  IconMessageDots,
 } from '@tabler/icons-react';
 import type { User } from '../../../types/user';
 import { ProfileStage } from '../../../types/user';
@@ -18,14 +17,12 @@ interface UserTableProps {
   users: User[];
   isLoading: boolean;
   onViewUser: (user: User) => void;
-  onCreateTestimonial: (user: User) => void;
 }
 
 const UserTable = ({ 
   users, 
   isLoading, 
-  onViewUser, 
-  onCreateTestimonial,
+  onViewUser,
 }: UserTableProps) => {
   const TableSkeleton = () => (
     <Table verticalSpacing="sm">
@@ -69,7 +66,6 @@ const UserTable = ({
             </Table.Td>
             <Table.Td>
               <Group gap="xs">
-                <Skeleton height={28} width={28} circle />
                 <Skeleton height={28} width={28} circle />
               </Group>
             </Table.Td>
@@ -155,9 +151,6 @@ const UserTable = ({
         <Group gap="xs">
           <ActionIcon variant="subtle" color="blue" onClick={() => onViewUser(user)}>
             <IconEye size={16} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="orange" onClick={() => onCreateTestimonial(user)}>
-            <IconMessageDots size={16} />
           </ActionIcon>
         </Group>
       </Table.Td>

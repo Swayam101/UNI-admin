@@ -7,7 +7,7 @@ import {
 import { testimonialService } from '../services/testimonialService';
 import type { 
   Testimonial, 
-  CreateTestimonialRequest 
+  CreateTestimonialRequest
 } from '../types/testimonial';
 
 interface UseTestimonialsParams {

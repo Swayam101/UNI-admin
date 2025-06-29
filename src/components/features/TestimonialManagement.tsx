@@ -15,6 +15,8 @@ import {
   Paper,
   SimpleGrid,
   Divider,
+  TextInput,
+  Textarea,
 } from '@mantine/core';
 import {
   IconEye,
@@ -23,36 +25,56 @@ import {
   IconCalendar,
   IconUser,
   IconTrash,
+  IconSearch,
+  IconPlus,
+  IconPhoto,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
+import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { useTestimonials, useDeleteTestimonial } from '../../hooks/useTestimonial';
-import type { Testimonial } from '../../types/testimonial';
+import { 
+  useTestimonials, 
+  useCreateTestimonial, 
+  useDeleteTestimonial 
+} from '../../hooks/useTestimonial';
+import type { Testimonial, CreateTestimonialRequest } from '../../types/testimonial';
 
 const TestimonialManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  console.log(setSearchQuery);
   
   // API hooks
   const { data: testimonialData, isLoading, error, refetch } = useTestimonials();
+  const createTestimonialMutation = useCreateTestimonial();
   const deleteTestimonialMutation = useDeleteTestimonial();
 
   // Extract testimonials array from structured response
   const testimonials = testimonialData?.testimonials || [];
   const totalTestimonials = testimonialData?.total || testimonials.length;
 
-  // Calculate stats
-  const activeTestimonials = testimonials.filter(t => t.isActive !== false).length;
+  // Create form
+  const createForm = useForm<CreateTestimonialRequest>({
+    initialValues: {
+      name: '',
+      profileImage: '',
+      message: '',
+    },
+    validate: {
+      name: (value) => (!value ? 'Name is required' : null),
+      profileImage: (value) => (!value ? 'Profile image URL is required' : null),
+      message: (value) => (!value ? 'Message is required' : null),
+    },
+  });
 
   // Skeleton Components
   const TableSkeleton = () => (
     <Table verticalSpacing="sm">
       <Table.Thead>
         <Table.Tr>
-          <Table.Th>User</Table.Th>
+          <Table.Th>Person</Table.Th>
           <Table.Th>Message Preview</Table.Th>
           <Table.Th>Created</Table.Th>
           <Table.Th>Actions</Table.Th>
@@ -66,7 +88,6 @@ const TestimonialManagement = () => {
                 <Skeleton height={40} width={40} circle />
                 <div>
                   <Skeleton height={16} width={120} mb={4} />
-                  <Skeleton height={12} width={180} />
                 </div>
               </Group>
             </Table.Td>
@@ -94,14 +115,11 @@ const TestimonialManagement = () => {
   };
 
   const handleDeleteTestimonial = (testimonial: Testimonial) => {
-    const user = testimonial.user;
-    const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User' : 'Unknown User';
-    
     modals.openConfirmModal({
       title: 'Delete Testimonial',
       children: (
         <Text size="sm">
-          Are you sure you want to delete the testimonial by <strong>{userName}</strong>? This action cannot be undone.
+          Are you sure you want to delete the testimonial by <strong>{testimonial.name}</strong>? This action cannot be undone.
         </Text>
       ),
       labels: { confirm: 'Delete', cancel: 'Cancel' },
@@ -127,20 +145,37 @@ const TestimonialManagement = () => {
     });
   };
 
+  const handleCreateTestimonial = async (values: CreateTestimonialRequest) => {
+    try {
+      await createTestimonialMutation.mutateAsync(values);
+      notifications.show({
+        title: 'Success',
+        message: 'Testimonial created successfully',
+        color: 'green',
+      });
+      createForm.reset();
+      closeCreate();
+    } catch {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to create testimonial. Please try again.',
+        color: 'red',
+      });
+    }
+  };
+
   const filteredTestimonials = testimonials.filter(testimonial => {
-    const user = testimonial.user;
-    const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
-    const userEmail = user?.email || '';
-    
-    const matchesSearch = testimonial.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         userEmail.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = testimonial.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         testimonial.message.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesSearch;
   });
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const getInitials = (name: string) => {
+    const words = name.split(' ');
+    return words.length > 1 
+      ? `${words[0].charAt(0)}${words[words.length - 1].charAt(0)}`.toUpperCase()
+      : name.substring(0, 2).toUpperCase();
   };
 
   const formatDate = (dateString: string | undefined) => {
@@ -157,23 +192,15 @@ const TestimonialManagement = () => {
   };
 
   const rows = filteredTestimonials.map((testimonial) => {
-    const user = testimonial.user;
-    const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User' : 'Unknown User';
-    const userEmail = user?.email || 'No email';
-
     return (
       <Table.Tr key={testimonial._id}>
         <Table.Td>
           <Group gap="sm">
-            <Avatar size={40} radius="xl" src={user?.profilePicture} color="blue">
-              {user?.firstName && user?.lastName && getInitials(user.firstName, user.lastName)}
+            <Avatar size={40} radius="xl" src={testimonial.profileImage} color="blue">
+              {getInitials(testimonial.name)}
             </Avatar>
             <div>
-              <Text fw={500}>{userName}</Text>
-              <Text size="sm" c="dimmed">{userEmail}</Text>
-              {user?.studying && (
-                <Text size="xs" c="dimmed">{user.studying}</Text>
-              )}
+              <Text fw={500}>{testimonial.name}</Text>
             </div>
           </Group>
         </Table.Td>
@@ -211,8 +238,11 @@ const TestimonialManagement = () => {
         {isLoading ? (
           <Skeleton height={32} width={200} />
         ) : (
-          <Title order={1}>Testimonial Management </Title>
+          <Title order={1}>Testimonial Management</Title>
         )}
+        <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+          Create Testimonial
+        </Button>
       </Group>
 
       {error && (
@@ -244,17 +274,21 @@ const TestimonialManagement = () => {
           <Group justify="space-between">
             <div>
               <Text size="sm" c="dimmed" fw={500}>
-                Active Testimonials
+                This Month
               </Text>
               <Text size="xl" fw={700} c="green">
-                {activeTestimonials}
+                {testimonials.filter(t => {
+                  if (!t.createdAt) return false;
+                  const createdDate = new Date(t.createdAt);
+                  const currentDate = new Date();
+                  return createdDate.getMonth() === currentDate.getMonth() && 
+                         createdDate.getFullYear() === currentDate.getFullYear();
+                }).length}
               </Text>
             </div>
             <IconUser size={24} color="var(--mantine-color-green-6)" />
           </Group>
         </Paper>
-
-        
       </SimpleGrid>
 
       <Card padding="lg" radius="md" withBorder>
@@ -262,23 +296,18 @@ const TestimonialManagement = () => {
           {isLoading ? (
             <>
               <Skeleton height={16} width={120} />
-              <Group>
-                <Skeleton height={36} width={120} />
-                <Skeleton height={36} width={300} />
-              </Group>
+              <Skeleton height={36} width={300} />
             </>
           ) : (
             <>
-              {/* <Text fw={500}>Testimonials ({filteredTestimonials.length})</Text>
-              <Group>
-                <TextInput
-                  placeholder="Search testimonials..."
-                  leftSection={<IconSearch size={16} />}
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.currentTarget.value)}
-                  style={{ width: 300 }}
-                />
-              </Group> */}
+              <Text fw={500}>Testimonials ({filteredTestimonials.length})</Text>
+              <TextInput
+                placeholder="Search testimonials..."
+                leftSection={<IconSearch size={16} />}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.currentTarget.value)}
+                style={{ width: 300 }}
+              />
             </>
           )}
         </Group>
@@ -290,7 +319,7 @@ const TestimonialManagement = () => {
             <Table verticalSpacing="sm">
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>User</Table.Th>
+                  <Table.Th>Person</Table.Th>
                   <Table.Th>Message Preview</Table.Th>
                   <Table.Th>Created</Table.Th>
                   <Table.Th>Actions</Table.Th>
@@ -299,7 +328,7 @@ const TestimonialManagement = () => {
               <Table.Tbody>
                 {rows.length > 0 ? rows : (
                   <Table.Tr>
-                    <Table.Td colSpan={5}>
+                    <Table.Td colSpan={4}>
                       <Text ta="center" py="xl" c="dimmed">
                         {searchQuery ? 'No testimonials found matching your search.' : 'No testimonials found.'}
                       </Text>
@@ -312,41 +341,69 @@ const TestimonialManagement = () => {
         </Table.ScrollContainer>
       </Card>
 
+      {/* Create Testimonial Modal */}
+      <Modal opened={createOpened} onClose={closeCreate} title="Create New Testimonial" size="lg">
+        <form onSubmit={createForm.onSubmit(handleCreateTestimonial)}>
+          <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="Enter person's name"
+              required
+              {...createForm.getInputProps('name')}
+            />
+            
+            <TextInput
+              label="Profile Image URL"
+              placeholder="Enter profile image URL"
+              required
+              leftSection={<IconPhoto size={16} />}
+              {...createForm.getInputProps('profileImage')}
+            />
+
+            <Textarea
+              label="Message"
+              placeholder="Enter testimonial message"
+              required
+              minRows={4}
+              maxRows={8}
+              {...createForm.getInputProps('message')}
+            />
+
+            <Group justify="flex-end">
+              <Button variant="outline" onClick={closeCreate}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                loading={createTestimonialMutation.isPending}
+                disabled={createTestimonialMutation.isPending}
+              >
+                Create Testimonial
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+
       {/* Testimonial Detail Modal */}
       <Modal opened={opened} onClose={close} title="Testimonial Details" size="lg">
         {selectedTestimonial && (
           <Stack gap="lg">
-            {/* User Info Header */}
+            {/* Person Info Header */}
             <Paper p="md" bg="gray.0" radius="md">
               <Group>
                 <Avatar 
                   size={60} 
                   radius="xl" 
-                  src={selectedTestimonial.user?.profilePicture} 
+                  src={selectedTestimonial.profileImage} 
                   color="blue"
                 >
-                  {selectedTestimonial.user?.firstName && selectedTestimonial.user?.lastName && 
-                    getInitials(
-                      selectedTestimonial.user.firstName, 
-                      selectedTestimonial.user.lastName
-                    )
-                  }
+                  {getInitials(selectedTestimonial.name)}
                 </Avatar>
                 <div style={{ flex: 1 }}>
                   <Text fw={600} size="lg">
-                    {selectedTestimonial.user 
-                      ? `${selectedTestimonial.user.firstName || ''} ${selectedTestimonial.user.lastName || ''}`.trim() || 'Unknown User'
-                      : 'Unknown User'
-                    }
+                    {selectedTestimonial.name}
                   </Text>
-                  <Text c="dimmed" size="sm">
-                    {selectedTestimonial.user?.email || 'No email available'}
-                  </Text>
-                  {selectedTestimonial.user?.studying && (
-                    <Text c="dimmed" size="xs">
-                      {selectedTestimonial.user.studying} • {selectedTestimonial.user.collegeGraduationYear || 'N/A'}
-                    </Text>
-                  )}
                 </div>
               </Group>
             </Paper>
@@ -366,17 +423,13 @@ const TestimonialManagement = () => {
             <Divider label="Metadata" labelPosition="left" />
 
             {/* Metadata */}
-            <SimpleGrid cols={2} spacing="md">
+            <SimpleGrid cols={1} spacing="md">
               <div>
                 <Text size="sm" c="dimmed" mb={4}>Created Date</Text>
                 <Group gap="xs">
                   <IconCalendar size={16} color="var(--mantine-color-dimmed)" />
                   <Text fw={500}>{formatDate(selectedTestimonial.createdAt)}</Text>
                 </Group>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed" mb={4}>Created By</Text>
-                <Text fw={500}>{selectedTestimonial.createdBy || 'System'}</Text>
               </div>
             </SimpleGrid>
 

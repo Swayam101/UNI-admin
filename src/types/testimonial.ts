@@ -2,32 +2,18 @@ import { ApiResponse } from './api';
 
 export interface Testimonial {
   _id?: string;
-  user: {
-    _id: string;
-    email: string;
-    // Additional user fields that might be populated
-    firstName?: string;
-    lastName?: string;
-    profilePicture?: string;
-    studying?: string;
-    collegeGraduationYear?: string;
-  };
+  name: string;
+  profileImage: string;
   message: string;
-  createdBy?: string; // Admin who created the testimonial
-  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
   __v?: number;
 }
 
 export interface CreateTestimonialRequest {
-  user: string; // MongoDB ObjectId as string
+  name: string;
+  profileImage: string;
   message: string;
-}
-
-export interface UpdateTestimonialRequest {
-  message?: string;
-  isActive?: boolean;
 }
 
 export type TestimonialResponse = ApiResponse<Testimonial | Testimonial[]>;

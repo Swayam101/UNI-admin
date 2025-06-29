@@ -11,7 +11,6 @@ import {
 import { IconAlertCircle } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { useUsers, useUpdateUser } from '../../hooks/useUser';
-import TestimonialModal from '../common/TestimonialModal';
 import type { User } from '../../types/user';
 import {
   UserTable,
@@ -21,9 +20,7 @@ import {
 
 const UserManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
-  const [testimonialOpened, { open: openTestimonial, close: closeTestimonial }] = useDisclosure(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [testimonialUser, setTestimonialUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -47,15 +44,12 @@ const UserManagement = () => {
     open();
   };
 
-  const handleCreateTestimonial = (user: User) => {
-    setTestimonialUser(user);
-    openTestimonial();
-  };
+
 
   const handleUpdateUserStatus = async (id: string, updates: { isBanned?: boolean; isSubscribed?: boolean }) => {
     try {
       await updateMutation.mutateAsync({ id, data: {
-        status: !updates.isBanned ? "banned" : "active",
+        status: updates.isBanned ? "banned" : "active",
         isSubscribed: updates.isSubscribed,
       } });
       close()
@@ -96,7 +90,6 @@ const UserManagement = () => {
             users={users}
             isLoading={isLoading}
             onViewUser={handleViewUser}
-            onCreateTestimonial={handleCreateTestimonial}
           />
 
           <Group justify="space-between" align="center">
@@ -131,12 +124,7 @@ const UserManagement = () => {
         isUpdating={updateMutation.isPending}
       />
 
-      {/* Testimonial Modal */}
-      <TestimonialModal
-        opened={testimonialOpened}
-        onClose={closeTestimonial}
-        user={testimonialUser}
-      />
+     
     </Stack>
   );
 };
