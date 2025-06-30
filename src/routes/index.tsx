@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { ProtectedRoute } from '../components/common';
-import { LoginPage, DashboardPage, CollegeFormPage } from '../pages';
+import { LoginPage, DashboardPage, CollegeFormPage, NotFoundPage } from '../pages';
 import { DashboardLayout } from '../layouts';
 import { 
   SchoolManagement, 
@@ -43,6 +43,8 @@ export const DashboardRoutes = () => {
       <Route path="/payments" element={<PaymentManagement />} />
       <Route path="/testimonials" element={<TestimonialManagement />} />
       <Route path="/contacts" element={<ContactManagement />} />
+      {/* Catch-all 404 for dashboard routes */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }; 
