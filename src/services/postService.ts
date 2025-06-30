@@ -127,7 +127,7 @@ export class PostService {
       }
 
       const response = await apiClient.get<ApiResponse<PostsResponse>>(
-        '/post/getAllPosts',
+        '/post/allRawPosts',
         { params: queryParams }
       );
       

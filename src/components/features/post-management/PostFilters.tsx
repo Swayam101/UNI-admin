@@ -1,4 +1,4 @@
-import { Group, TextInput, Select } from '@mantine/core';
+import { Group, TextInput } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 
 interface PostFiltersProps {
@@ -14,6 +14,9 @@ export const PostFilters = ({
   statusFilter,
   onStatusFilterChange,
 }: PostFiltersProps) => {
+  console.log(statusFilter);
+  console.log(onStatusFilterChange);
+  
   return (
     <Group gap="md">
       <TextInput
@@ -24,7 +27,7 @@ export const PostFilters = ({
         style={{ flex: 1 }}
       />
       
-      <Select
+      {/* <Select
         placeholder="Filter by status"
         value={statusFilter}
         onChange={(value) => onStatusFilterChange(value || 'all')}
@@ -37,7 +40,7 @@ export const PostFilters = ({
         ]}
         clearable
         style={{ minWidth: 150 }}
-      />
+      /> */}
     </Group>
   );
 }; 
