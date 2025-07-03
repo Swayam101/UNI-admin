@@ -26,7 +26,7 @@ const SchoolManagement = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(2);
   
   // Debounce search query to avoid too many API calls
   const [debouncedSearch] = useDebouncedValue(searchQuery, 500);
@@ -41,7 +41,7 @@ const SchoolManagement = () => {
   // Extract data from API response
   const colleges = collegeData?.colleges || [];
   const totalColleges = collegeData?.totalDocs || 0;
-  const totalPages = collegeData?.pages || 1;
+  const totalPages = collegeData?.totalPages || 1;
 
   // Reset to page 1 when search changes
   useEffect(() => {

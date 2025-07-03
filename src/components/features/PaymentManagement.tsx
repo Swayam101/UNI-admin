@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Stack, Title, Card, Table, Text, Loader, Center, Button, Group, Modal, NumberInput, Badge, Box, List, ThemeIcon, Divider } from '@mantine/core';
+import { Stack, Title, Card, Table, Text, Loader, Center, Button, Group, Modal, NumberInput, Badge, Box, List, ThemeIcon, Divider, Pagination } from '@mantine/core';
 import { IconSettings, IconCheck } from '@tabler/icons-react';
 import { useDisclosure, useDebouncedValue } from '@mantine/hooks';
 import { PaymentStats } from './payment-management/PaymentStats';
@@ -9,6 +9,8 @@ import { useGetAllPayments } from '../../hooks/useTransactions';
 import { useUpdatePricing } from '../../hooks/usePosts';
 
 type PaymentType = 'all' | 'post' | 'subscription';
+
+const ITEMS_PER_PAGE = 10;
 
 const PaymentManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,13 +41,14 @@ const PaymentManagement = () => {
 
   const backendParams = {
     page: currentPage,
-    limit: 10,
+    limit: ITEMS_PER_PAGE,
     search: debouncedSearch.trim() || undefined,
     paymentType: paymentType === 'all' ? undefined : paymentType,
   };
 
   const { data, isLoading, isError } = useGetAllPayments(backendParams);
   const payments = data?.data?.transactions || [];
+  const totalPages = Math.ceil((data?.data?.totalDocs || 0) / ITEMS_PER_PAGE);
 
   // Stats from API data
   const stats = {
@@ -57,6 +60,11 @@ const PaymentManagement = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, paymentType]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const starterFeatures = [
     'Submit 1 post to Instagram + website feed',
@@ -113,10 +121,22 @@ const PaymentManagement = () => {
                 <PaymentTable payments={payments} isLoading={false} />
               </Table.ScrollContainer>
 
-              {payments.length === 0 && (
+              {payments.length === 0 ? (
                 <Text ta="center" py="xl" c="dimmed">
                   No payments found matching your filters.
                 </Text>
+              ) : (
+                <Group justify="space-between" mt="md">
+                  <Text size="sm" c="dimmed">
+                    Showing {Math.min(ITEMS_PER_PAGE * (currentPage - 1) + 1, stats.totalTransactions)} - {Math.min(ITEMS_PER_PAGE * currentPage, stats.totalTransactions)} of {stats.totalTransactions} payments
+                  </Text>
+                  <Pagination 
+                    value={currentPage}
+                    onChange={handlePageChange}
+                    total={totalPages}
+                    radius="md"
+                  />
+                </Group>
               )}
             </>
           )}

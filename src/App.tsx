@@ -13,19 +13,19 @@ import { AppRoutes } from "./routes";
 const App = () => {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <ModalsProvider>
-            <Notifications />
-                      <BrowserRouter>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ModalsProvider>
+          <Notifications />
+          <BrowserRouter>
             <AppRoutes />
             <ErrorTester />
           </BrowserRouter>
-            {/* React Query DevTools - only in development */}
-            {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-          </ModalsProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+          {/* React Query DevTools - only in development */}
+          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+        </ModalsProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 };

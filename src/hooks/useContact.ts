@@ -17,9 +17,10 @@ export type UseContactsParams = GetAllContactsParams;
 
 interface ContactListData {
   contacts: Contact[];
-  total: number;
-  currentPage: number;
-  pages: number;
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
 }
 
 // Query Keys

@@ -14,9 +14,10 @@ export interface Contact {
 
 export interface ContactListData {
   contacts: Contact[];
-  total: number;
-  currentPage: number;
-  pages: number;
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
 }
 
 export type ContactListResponse = ApiResponse<ContactListData>;

@@ -9,6 +9,9 @@ import {
   Switch,
   NumberInput,
   Grid,
+  Pagination,
+  Text,
+  Center,
 } from '@mantine/core';
 import {
   IconSettings,
@@ -23,6 +26,8 @@ import {
 import { useGetAllPosts, useGetInstagramWindow, useUpdateInstagramWindow } from '../../hooks/usePosts';
 import { Post } from '../../services/postService';
 
+const ITEMS_PER_PAGE = 10;
+
 const PostManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [settingsOpened, { open: openSettings, close: closeSettings }] = useDisclosure(false);
@@ -30,22 +35,29 @@ const PostManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: postsData } = useGetAllPosts({
-    page: 1,
-    limit: 10,
+  const { data: postsData, isLoading: isPostsLoading } = useGetAllPosts({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
     search: searchQuery,
   });
 
   const { data: instagramWindowData, isLoading: isInstagramWindowLoading } = useGetInstagramWindow();
 
-  const { posts } = useMemo(() => {
-    if (!postsData) return { posts: [] };
+  const { posts, totalPages } = useMemo(() => {
+    if (!postsData) return { posts: [], totalPages: 0 };
 
     return {
       posts: postsData.data.posts,
+      totalPages: Math.ceil(postsData.data.totalDocs / ITEMS_PER_PAGE),
     };
   }, [postsData]);
+
+  // Reset to first page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   // Simulate loading
   useEffect(() => {
@@ -92,6 +104,11 @@ const PostManagement = () => {
     open();
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <Stack gap="lg">
       <Group justify="space-between">
@@ -114,13 +131,33 @@ const PostManagement = () => {
             onStatusFilterChange={setStatusFilter}
           />
 
-          {loading ? (
+          {loading || isPostsLoading ? (
             <PostTableSkeleton />
           ) : (
-            <PostTable
-              posts={posts}
-              onViewPost={handleViewPost}
-            />
+            <>
+              <PostTable
+                posts={posts}
+                onViewPost={handleViewPost}
+              />
+              
+              {posts.length > 0 ? (
+                <Group justify="space-between" mt="md">
+                  <Text size="sm" c="dimmed">
+                    Showing {Math.min(ITEMS_PER_PAGE * (currentPage - 1) + 1, postsData?.data.totalDocs || 0)} - {Math.min(ITEMS_PER_PAGE * currentPage, postsData?.data.totalDocs || 0)} of {postsData?.data.totalDocs || 0} posts
+                  </Text>
+                  <Pagination 
+                    value={currentPage}
+                    onChange={handlePageChange}
+                    total={totalPages}
+                    radius="md"
+                  />
+                </Group>
+              ) : (
+                <Center>
+                  <Text c="dimmed">No posts found</Text>
+                </Center>
+              )}
+            </>
           )}
         </Stack>
       </Card>

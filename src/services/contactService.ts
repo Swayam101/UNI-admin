@@ -14,9 +14,10 @@ const CONTACT_ENDPOINTS = {
 
 interface ContactListData {
   contacts: Contact[];
-  total: number;
-  currentPage: number;
-  pages: number;
+  totalDocs: number;
+  limit: number;
+  totalPages: number;
+  page: number;
 }
 
 export const contactService = {
@@ -46,8 +47,8 @@ export const contactService = {
 
     const response = await apiClient.get<ContactListResponse>(url);
     // Extract the data we need from the API response
-    const { contacts, total, currentPage, pages } = response.data;
-    return { contacts, total, currentPage, pages };
+    const { contacts, totalDocs, limit, totalPages, page } = response.data;
+    return { contacts, totalDocs, limit, totalPages, page };
   },
 
   // Update contact addressed status

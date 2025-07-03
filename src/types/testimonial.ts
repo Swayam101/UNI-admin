@@ -12,7 +12,7 @@ export interface Testimonial {
 
 export interface CreateTestimonialRequest {
   name: string;
-  profileImage: string;
+  file: File;
   message: string;
 }
 
@@ -20,9 +20,10 @@ export type TestimonialResponse = ApiResponse<Testimonial | Testimonial[]>;
 
 export type TestimonialListResponse = ApiResponse<{
   testimonials: Testimonial[],
-  total: number,
-  currentPage: number,
-  pages: number
+  totalDocs: number,
+  limit: number,
+  totalPages: number,
+  page: number
 }>;
 
 export type TestimonialDetailResponse = ApiResponse<Testimonial>; 

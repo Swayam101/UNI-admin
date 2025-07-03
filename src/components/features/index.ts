@@ -9,8 +9,6 @@ export { default as PaymentManagement } from './PaymentManagement';
 export { default as PostManagement } from './PostManagement';
 export { default as ContactManagement } from './ContactManagement';
 
-// College form sub-components
-export * from './college-form';
 
 // Analytics sub-components
 export * from './analytics';

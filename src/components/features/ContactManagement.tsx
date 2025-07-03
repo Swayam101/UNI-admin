@@ -65,7 +65,7 @@ const ContactManagement = () => {
             isLoading={isLoading}
             onToggleAddressed={handleToggleAddressed}
             currentPage={page}
-            totalPages={response?.pages || 1}
+            totalPages={response?.totalPages || 1}
             onPageChange={setPage}
           />
         </Stack>

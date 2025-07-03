@@ -28,17 +28,13 @@ export interface Payment {
 
 export interface TransactionsResponse {
   transactions: Payment[];
-  totalRevenue: number;
-  totalTransactions: number;
   totalDocs: number;
   limit: number;
   totalPages: number;
   page: number;
-  pagingCounter: number;
-  hasPrevPage: boolean;
-  hasNextPage: boolean;
-  prevPage: number | null;
-  nextPage: number | null;
+  totalRevenue: number;
+  totalTransactions: number;
+
 }
 
 export interface GetPaymentsParams {

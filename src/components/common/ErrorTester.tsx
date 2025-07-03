@@ -5,7 +5,6 @@ import { useState } from 'react';
 const ErrorTester = () => {
   const [shouldError, setShouldError] = useState(false);
 
-  // Only show in development mode
   if (!import.meta.env.DEV) {
     return null;
   }

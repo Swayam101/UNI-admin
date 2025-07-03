@@ -8,14 +8,16 @@ import {
   Text,
   Avatar,
   Skeleton,
-  Switch,
+  Tooltip,
 } from '@mantine/core';
 import {
   IconTrash,
   IconEdit,
   IconBrandInstagram,
+  IconEye,
+  IconEyeOff,
 } from '@tabler/icons-react';
-import { useDeleteCollege, useUpdateCollege } from '../../../hooks/useCollege';
+import { useDeleteCollege } from '../../../hooks/useCollege';
 import type { College } from '../../../types/college';
 
 interface CollegeTableProps {
@@ -28,20 +30,19 @@ interface CollegeTableProps {
 export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: CollegeTableProps) => {
   const navigate = useNavigate();
   const deleteMutation = useDeleteCollege();
-  const updateMutation = useUpdateCollege();
 
   // Helper functions
   const getInitials = useCallback((name: string) => {
     return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
   }, []);
 
-  const getFullLocation = useCallback((college: College) => {
-    const parts = [college.city, college.state, college.country].filter(Boolean);
-    return parts.join(', ');
+  const hasInstagramSetup = useCallback((college: College) => {
+    return !!(college.instagramBusinessId && college.instagramAccessToken);
   }, []);
 
-  const hasInstagramIntegration = useCallback((college: College) => {
-    return !!(college.instagramBusinessId && college.instagramAccessToken);
+  const formatDate = useCallback((dateString?: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
   }, []);
 
   // Event handlers
@@ -50,7 +51,7 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
   }, [navigate]);
 
   const handleDeleteCollege = useCallback(async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this college?')) {
+    if (window.confirm('Are you sure you want to delete this college? This action cannot be undone.')) {
       try {
         await deleteMutation.mutateAsync(id);
       } catch (error) {
@@ -59,31 +60,15 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
     }
   }, [deleteMutation]);
 
-  const handleInstagramToggle = useCallback(async (college: College) => {
-    if (!college._id) return;
-    
-    try {
-      await updateMutation.mutateAsync({
-        id: college._id,
-        data: {
-          isInstagramActive: !college.isInstagramActive
-        }
-      });
-    } catch (error) {
-      console.error('Error updating Instagram status:', error);
-    }
-  }, [updateMutation]);
-
   // Skeleton Component
   const TableSkeleton = () => (
     <Table verticalSpacing="sm">
       <Table.Thead>
         <Table.Tr>
           <Table.Th>College</Table.Th>
-          <Table.Th>Location</Table.Th>
-          <Table.Th>Contact</Table.Th>
-          <Table.Th>Established</Table.Th>
-          <Table.Th>Instagram</Table.Th>
+          <Table.Th>Instagram Business ID</Table.Th>
+          <Table.Th>Integration Status</Table.Th>
+          <Table.Th>Created</Table.Th>
           <Table.Th>Actions</Table.Th>
         </Table.Tr>
       </Table.Thead>
@@ -93,32 +78,17 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
             <Table.Td>
               <Group gap="sm">
                 <Skeleton height={40} width={40} circle />
-                <div>
-                  <Skeleton height={16} width={140} mb={4} />
-                  <Skeleton height={12} width={120} />
-                </div>
+                <Skeleton height={16} width={140} />
               </Group>
             </Table.Td>
             <Table.Td>
-              <div>
-                <Skeleton height={14} width={100} mb={2} />
-                <Skeleton height={12} width={80} />
-              </div>
+              <Skeleton height={14} width={120} />
             </Table.Td>
             <Table.Td>
-              <div>
-                <Skeleton height={14} width={150} mb={2} />
-                <Skeleton height={12} width={120} />
-              </div>
+              <Skeleton height={20} width={80} radius="sm" />
             </Table.Td>
             <Table.Td>
-              <Skeleton height={14} width={60} />
-            </Table.Td>
-            <Table.Td>
-              <Group gap="xs">
-                <Skeleton height={16} width={16} circle />
-                <Skeleton height={20} width={80} radius="sm" />
-              </Group>
+              <Skeleton height={14} width={80} />
             </Table.Td>
             <Table.Td>
               <Group gap="xs">
@@ -132,109 +102,140 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
     </Table>
   );
 
+  // Render loading skeleton
+  if (isLoading) {
+    return <TableSkeleton />;
+  }
+
+  // Filter colleges based on search
+  const filteredColleges = colleges.filter(college =>
+    college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    college.instagramBusinessId?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Table rows
-  const rows = colleges.map((college) => (
+  const rows = filteredColleges.map((college) => (
     <Table.Tr key={college._id}>
       <Table.Td>  
         <Group gap="sm">
           <Avatar 
             size={40} 
             radius="xl" 
-            src={college.logoUrl}
             color="blue"
+            variant="filled"
           >
-            {!college.logoUrl && getInitials(college.name)}
+            {getInitials(college.name)}
           </Avatar>
           <div>
             <Text fw={500}>{college.name}</Text>
-            <Text size="sm" c="dimmed" lineClamp={1}>{college.description}</Text>
+            <Text size="xs" c="dimmed">ID: {college._id}</Text>
           </div>
         </Group>
       </Table.Td>
-      <Table.Td>
-        <div>
-          <Text size="sm">{getFullLocation(college)}</Text>
-          <Text size="xs" c="dimmed">{college.postalCode}</Text>
-        </div>
-      </Table.Td>
-      <Table.Td>
-        <div>
-          <Text size="sm">{college.email}</Text>
-          <Text size="xs" c="dimmed">{college.phoneNumber}</Text>
-        </div>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm">{college.establishedYear || 'N/A'}</Text>
-      </Table.Td>
+      
       <Table.Td>
         <Group gap="xs">
-          <Switch
-            checked={college.isInstagramActive || false}
-            onChange={() => handleInstagramToggle(college)}
-            disabled={!hasInstagramIntegration(college) || updateMutation.isPending}
-            size="sm"
-          />
-          {hasInstagramIntegration(college) && (
+          <Text size="sm" ff="monospace">
+            {college.instagramBusinessId}
+          </Text>
+          <Tooltip label="Instagram Business ID">
+            <IconBrandInstagram size={14} color="#E4405F" />
+          </Tooltip>
+        </Group>
+      </Table.Td>
+      
+      <Table.Td>
+        <Group gap="xs">
+          {hasInstagramSetup(college) ? (
             <Badge 
-              leftSection={<IconBrandInstagram size={12} />} 
-              color={college.isInstagramActive ? "green" : "gray"} 
+              leftSection={<IconEye size={12} />} 
+              color="green" 
               variant="light"
             >
-              {college.isInstagramActive ? "Active" : "Inactive"}
+              Configured
             </Badge>
-          )}
-          {!hasInstagramIntegration(college) && (
-            <Badge color="red" variant="light">
-              Not Setup
+          ) : (
+            <Badge 
+              leftSection={<IconEyeOff size={12} />} 
+              color="red" 
+              variant="light"
+            >
+              Incomplete
             </Badge>
           )}
         </Group>
       </Table.Td>
+      
+      <Table.Td>
+        <Text size="sm">{formatDate(college.createdAt)}</Text>
+      </Table.Td>
+      
       <Table.Td>
         <Group gap="xs">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleEditCollege(college)}>
+          <Tooltip label="Edit College">
+            <ActionIcon 
+              variant="subtle" 
+              color="blue" 
+              onClick={() => handleEditCollege(college)}
+            >
             <IconEdit size={16} />
           </ActionIcon>
+          </Tooltip>
+          
+          <Tooltip label="Delete College">
           <ActionIcon 
             variant="subtle" 
             color="red" 
             onClick={() => handleDeleteCollege(college._id!)}
             loading={deleteMutation.isPending}
+              disabled={deleteMutation.isPending}
           >
             <IconTrash size={16} />
           </ActionIcon>
+          </Tooltip>
         </Group>
       </Table.Td>
     </Table.Tr>
   ));
 
+  // Empty state
+  if (filteredColleges.length === 0) {
   return (
-    <Table.ScrollContainer minWidth={800}>
-      {isLoading ? <TableSkeleton /> : (
-        <Table verticalSpacing="sm">
+      <Table>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>College</Table.Th>
-              <Table.Th>Location</Table.Th>
-              <Table.Th>Contact</Table.Th>
-              <Table.Th>Established</Table.Th>
-              <Table.Th>Instagram</Table.Th>
+            <Table.Th>Instagram Business ID</Table.Th>
+            <Table.Th>Integration Status</Table.Th>
+            <Table.Th>Created</Table.Th>
               <Table.Th>Actions</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {rows && rows.length > 0 ? rows : (
               <Table.Tr>
-                <Table.Td colSpan={6}>
+            <Table.Td colSpan={5}>
                   <Text ta="center" py="xl" c="dimmed">
-                    {searchQuery ? 'No colleges found matching your search.' : 'No colleges found. Add your first college!'}
+                {searchQuery ? 'No colleges found matching your search.' : 'No colleges found. Create your first college to get started.'}
                   </Text>
                 </Table.Td>
               </Table.Tr>
-            )}
           </Table.Tbody>
         </Table>
-      )}
-    </Table.ScrollContainer>
+    );
+  }
+
+  return (
+    <Table verticalSpacing="sm">
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>College</Table.Th>
+          <Table.Th>Instagram Business ID</Table.Th>
+          <Table.Th>Integration Status</Table.Th>
+          <Table.Th>Created</Table.Th>
+          <Table.Th>Actions</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>{rows}</Table.Tbody>
+    </Table>
   );
 }; 

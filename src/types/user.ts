@@ -177,9 +177,10 @@ export type UserResponse = ApiResponse<User | User[]>;
 
 export type UserListResponse = ApiResponse<{
   users: User[],
-  total: number,
-  currentPage: number,
-  pages: number
+  totalDocs: number,
+  limit: number,
+  totalPages: number,
+  page: number
 }>;
 
 export type UserDetailResponse = ApiResponse<User>;

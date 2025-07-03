@@ -6,7 +6,6 @@ import {
   Alert,
   Pagination,
   Group,
-  Select,
 } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
@@ -23,12 +22,11 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
 
   // API hooks
   const { data: userData, isLoading, error } = useUsers({ 
     page: currentPage, 
-    limit: pageSize, 
+    limit: 10, 
     search: searchQuery 
   });
 
@@ -36,8 +34,8 @@ const UserManagement = () => {
 
   // Extract users array and pagination data from structured response
   const users = userData?.users || [];
-  const totalUsers = userData?.total || 0;
-  const totalPages = Math.ceil(totalUsers / pageSize);
+  const totalUsers = userData?.totalDocs || 0;
+  const totalPages = Math.ceil(totalUsers / 10);
 
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
@@ -62,12 +60,7 @@ const UserManagement = () => {
     setCurrentPage(page);
   };
 
-  const handlePageSizeChange = (value: string | null) => {
-    if (value) {
-      setPageSize(parseInt(value));
-      setCurrentPage(1);
-    }
-  };
+
 
   return (
     <Stack gap="md">
@@ -93,17 +86,7 @@ const UserManagement = () => {
           />
 
           <Group justify="space-between" align="center">
-            <Select
-              value={pageSize.toString()}
-              onChange={handlePageSizeChange}
-              data={[
-                { value: '5', label: '5 per page' },
-                { value: '10', label: '10 per page' },
-                { value: '25', label: '25 per page' },
-                { value: '50', label: '50 per page' },
-              ]}
-              style={{ width: 130 }}
-            />
+        
             <Pagination
               value={currentPage}
               onChange={handlePageChange}

@@ -13,8 +13,10 @@ src/
 ├── hooks/
 │   └── useCollege.ts             # React Query hooks for college operations
 ├── components/
-│   ├── CollegeForm.tsx           # Comprehensive college form component
-│   └── SchoolManagement.tsx      # Updated college management page
+│   ├── CollegeForm.tsx           # Simplified college form component
+│   └── SchoolManagement.tsx      # College management page
+│   └── school-management/
+│       └── CollegeTable.tsx      # College table component
 └── docs/
     └── college-api-integration.md # This documentation
 ```
@@ -26,13 +28,13 @@ Based on the provided Postman collection, the following endpoints are implemente
 ### 1. Create College
 - **Method:** `POST`
 - **Endpoint:** `/colleges/createCollege`
-- **Description:** Creates a new college with comprehensive details
+- **Description:** Creates a new college with Instagram integration details
 - **Hook:** `useCreateCollege()`
 
 ### 2. Get All Colleges
 - **Method:** `GET`
 - **Endpoint:** `/colleges/getAllColleges`
-- **Description:** Retrieves all colleges
+- **Description:** Retrieves all colleges with pagination support
 - **Hook:** `useColleges()`
 
 ### 3. Get College by ID
@@ -55,43 +57,73 @@ Based on the provided Postman collection, the following endpoints are implemente
 
 ## 📋 Data Schema
 
-The college data includes the following fields:
+The college data includes **only** the following 3 required fields:
 
-### Basic Information
-- `name` (required) - College name
-- `description` (required) - College description
-- `logoUrl` - Logo image URL
-- `websiteUrl` - Official website
-- `establishedYear` - Year founded
-- `campusSize` - Campus size description
-- `motto` - College motto
+### Required Fields
+- `name` (string, required) - College name
+- `instagramBusinessId` (string, required) - Instagram Business account ID
+- `instagramAccessToken` (string, required) - Instagram API access token
 
-### Contact Information
-- `email` (required) - Primary contact email
-- `phoneNumber` (required) - Primary phone number
-- `faxNumber` - Fax number
-- `addressLine1` (required) - Street address
-- `addressLine2` - Additional address info
-- `city` (required) - City
-- `state` - State/Province
-- `country` (required) - Country
-- `postalCode` (required) - Postal code
+### System Fields
+- `_id` (string, optional) - Database identifier
+- `createdAt` (string, optional) - Creation timestamp
+- `updatedAt` (string, optional) - Last update timestamp
 
-### Administrative Contacts
-- `principalName` - Principal/President name
-- `principalContact` - Principal contact number
-- `admissionContactEmail` - Admissions email
-- `admissionContactPhone` - Admissions phone
+## 🎯 Simplified Structure
 
-### Academic Information
-- `coursesOffered` - Array of courses
-- `accreditation` - Accrediting body
-- `facilities` - Array of facilities
+This college management system is specifically designed for Instagram integration and focuses on the essential fields needed for social media content management.
 
-### Social Media Integration
-- `socialLinks` - Array of social media URLs
-- `instagramBusinessId` - Instagram Business Account ID
-- `instagramAccessToken` - Instagram API access token
+### TypeScript Interfaces
+
+```typescript
+export interface College {
+  _id?: string;
+  name: string;
+  instagramBusinessId: string;
+  instagramAccessToken: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateCollegeRequest {
+  name: string;
+  instagramBusinessId: string;
+  instagramAccessToken: string;
+}
+
+export interface UpdateCollegeRequest {
+  name?: string;
+  instagramBusinessId?: string;
+  instagramAccessToken?: string;
+}
+```
+
+## 🔐 Security Considerations
+
+- Instagram access tokens are treated as sensitive data
+- Tokens are masked in the UI (password field type)
+- API responses should exclude sensitive token data where appropriate
+
+## 📱 UI Components
+
+### College Form
+- Simple 3-field form
+- Real-time validation
+- Instagram branding and icons
+- Password masking for access token
+
+### College Table
+- Displays college name and Instagram Business ID
+- Shows integration status (Configured/Incomplete)
+- Creation date tracking
+- Edit and delete actions
+
+## 🚀 Future Enhancements
+
+- Token expiration handling
+- Instagram API connectivity testing
+- Bulk import/export functionality
+- Token refresh automation
 
 ## 🎯 Usage Examples
 
@@ -116,36 +148,16 @@ function MyComponent() {
   // Create college mutation
   const createMutation = useCreateCollege();
   
-  const handleCreate = async (collegeData) => {
+  const handleCreate = async (collegeData: CreateCollegeRequest) => {
     try {
-      await createMutation.mutateAsync(collegeData);
+      await createMutation.mutateAsync({
+        name: 'Example College',
+        instagramBusinessId: '123456789',
+        instagramAccessToken: 'EAAG...'
+      });
       console.log('College created successfully!');
     } catch (error) {
       console.error('Error creating college:', error);
-    }
-  };
-  
-  // Update college mutation
-  const updateMutation = useUpdateCollege();
-  
-  const handleUpdate = async (id, updates) => {
-    try {
-      await updateMutation.mutateAsync({ id, data: updates });
-      console.log('College updated successfully!');
-    } catch (error) {
-      console.error('Error updating college:', error);
-    }
-  };
-  
-  // Delete college mutation
-  const deleteMutation = useDeleteCollege();
-  
-  const handleDelete = async (id) => {
-    try {
-      await deleteMutation.mutateAsync(id);
-      console.log('College deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting college:', error);
     }
   };
   
@@ -196,109 +208,52 @@ The implementation uses TanStack Query (React Query) for:
 - **Error handling** - Built-in error states
 - **Loading states** - Built-in loading indicators
 
-### Query Keys Structure
-
-```typescript
-COLLEGE_QUERY_KEYS = {
-  all: ['colleges'],
-  lists: ['colleges', 'list'],
-  list: (filters) => ['colleges', 'list', { filters }],
-  details: ['colleges', 'detail'],
-  detail: (id) => ['colleges', 'detail', id],
-}
-```
-
 ## 🛠️ Features
 
-### 1. Comprehensive Form
-- **Tabbed interface** for organized data entry
-- **Validation** for required fields
-- **Real-time form state** management
-- **Error handling** with user feedback
+### 1. Simplified Form
+- **3-field form** for essential Instagram integration data
+- **Real-time validation** for required fields
+- **Password masking** for access tokens
+- **Instagram branding** with icons
 
-### 2. Advanced Table
-- **Search functionality** across multiple fields
-- **Real-time data** from API
-- **Loading states** with skeletons
-- **Error handling** with retry options
-- **Instagram integration status** display
+### 2. Streamlined Table
+- **Search functionality** across name and Instagram Business ID
+- **Integration status** indicators
+- **Creation date** tracking
+- **Edit and delete** actions with confirmations
 
 ### 3. API Integration
 - **Type-safe** TypeScript interfaces
 - **Modular service** functions
 - **React Query** for state management
 - **Error boundaries** and handling
-- **Optimistic updates** for better UX
 
 ## 🎨 UI Features
 
-### Loading States
-- Skeleton loaders for tables and forms
-- Loading overlays for forms
-- Button loading states for actions
+### Security
+- Access tokens are masked in the UI
+- Password field type for sensitive data
+- Confirmation dialogs for destructive actions
 
-### Error Handling
-- Alert components for API errors
-- Retry functionality
-- Form validation errors
-- Network error recovery
+### User Experience
+- Loading states with skeletons
+- Real-time form validation
+- Instagram-themed icons and colors
+- Responsive design for mobile and desktop
+## 🔧 Development Notes
 
-### Search & Filter
-- Real-time search across college name, city, and country
-- Instant filtering without API calls
-- Empty state messages
+### Adding New Fields
+If you need to add more fields in the future:
+1. Update the `College` interface in `types/college.ts`
+2. Add fields to the form in `CollegeForm.tsx`
+3. Update table columns in `CollegeTable.tsx`
+4. Update validation rules as needed
 
-## 📝 Environment Setup
-
-Ensure your environment variables are set:
+### Environment Variables
+Ensure your API base URL is configured:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:4000/api/v1
 ```
 
-The API client automatically handles:
-- Authentication headers
-- Request/response interceptors
-- Token management
-- Error transformation
-
-## 🚀 Best Practices
-
-1. **Always handle loading states** for better UX
-2. **Use TypeScript interfaces** for type safety
-3. **Implement proper error handling** with user feedback
-4. **Leverage React Query caching** for performance
-5. **Validate forms** before submission
-6. **Use optimistic updates** where appropriate
-7. **Implement search/filter** for large datasets
-
-## 🔧 Customization
-
-### Adding New Fields
-1. Update the `College` interface in `types/college.ts`
-2. Add fields to the form in `CollegeForm.tsx`
-3. Update table columns in `SchoolManagement.tsx`
-
-### Custom Validation
-Add validation rules in the form component:
-
-```typescript
-validate: {
-  email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-  // Add more validation rules
-}
-```
-
-### Custom Hooks
-Create additional hooks for specific use cases:
-
-```typescript
-export const useCollegeStats = () => {
-  return useQuery({
-    queryKey: ['colleges', 'stats'],
-    queryFn: () => collegeService.getStats(),
-  });
-};
-```
-
-This structure provides a robust, scalable foundation for college management with modern React patterns and best practices. 
+This simplified structure provides a focused, secure foundation for Instagram-integrated college management. 

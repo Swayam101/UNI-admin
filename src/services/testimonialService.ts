@@ -21,9 +21,19 @@ const TESTIMONIAL_ENDPOINTS = {
 export const testimonialService = {
   // Create a new testimonial
   createTestimonial: async (data: CreateTestimonialRequest): Promise<Testimonial> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('file', data.file);
+    formData.append('message', data.message);
+
     const response = await apiClient.post<TestimonialDetailResponse>(
       TESTIMONIAL_ENDPOINTS.CREATE,
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data;
   },

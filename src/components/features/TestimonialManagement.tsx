@@ -17,6 +17,7 @@ import {
   Divider,
   TextInput,
   Textarea,
+  FileInput,
 } from '@mantine/core';
 import {
   IconEye,
@@ -27,7 +28,8 @@ import {
   IconTrash,
   IconSearch,
   IconPlus,
-  IconPhoto,
+  
+  IconUpload,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
@@ -53,18 +55,18 @@ const TestimonialManagement = () => {
 
   // Extract testimonials array from structured response
   const testimonials = testimonialData?.testimonials || [];
-  const totalTestimonials = testimonialData?.total || testimonials.length;
+  const totalTestimonials = testimonialData?.totalDocs || testimonials.length;
 
   // Create form
   const createForm = useForm<CreateTestimonialRequest>({
     initialValues: {
       name: '',
-      profileImage: '',
+      file: null as unknown as File,
       message: '',
     },
     validate: {
       name: (value) => (!value ? 'Name is required' : null),
-      profileImage: (value) => (!value ? 'Profile image URL is required' : null),
+      file: (value) => (!value ? 'Profile image is required' : null),
       message: (value) => (!value ? 'Message is required' : null),
     },
   });
@@ -342,22 +344,31 @@ const TestimonialManagement = () => {
       </Card>
 
       {/* Create Testimonial Modal */}
-      <Modal opened={createOpened} onClose={closeCreate} title="Create New Testimonial" size="lg">
+      <Modal 
+        opened={createOpened} 
+        onClose={() => {
+          closeCreate();
+          createForm.reset();
+        }}
+        title="Create New Testimonial"
+        size="lg"
+      >
         <form onSubmit={createForm.onSubmit(handleCreateTestimonial)}>
           <Stack gap="md">
             <TextInput
               label="Name"
-              placeholder="Enter person's name"
+              placeholder="Enter name"
               required
               {...createForm.getInputProps('name')}
             />
             
-            <TextInput
-              label="Profile Image URL"
-              placeholder="Enter profile image URL"
+            <FileInput
+              label="Profile Image"
+              placeholder="Upload profile image"
+              accept="image/*"
               required
-              leftSection={<IconPhoto size={16} />}
-              {...createForm.getInputProps('profileImage')}
+              leftSection={<IconUpload size={16} />}
+              {...createForm.getInputProps('file')}
             />
 
             <Textarea
@@ -365,12 +376,14 @@ const TestimonialManagement = () => {
               placeholder="Enter testimonial message"
               required
               minRows={4}
-              maxRows={8}
               {...createForm.getInputProps('message')}
             />
 
-            <Group justify="flex-end">
-              <Button variant="outline" onClick={closeCreate}>
+            <Group justify="flex-end" mt="md">
+              <Button variant="subtle" onClick={() => {
+                closeCreate();
+                createForm.reset();
+              }}>
                 Cancel
               </Button>
               <Button 
@@ -378,7 +391,7 @@ const TestimonialManagement = () => {
                 loading={createTestimonialMutation.isPending}
                 disabled={createTestimonialMutation.isPending}
               >
-                Create Testimonial
+                Create
               </Button>
             </Group>
           </Stack>
