@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from "react";
 import {
   Title,
   Card,
@@ -12,27 +11,31 @@ import {
   Alert,
   Pagination,
   Select,
-} from '@mantine/core';
-import {
-  IconPlus,
-  IconSearch,
-  IconAlertCircle,
-} from '@tabler/icons-react';
-import { useColleges } from '../../hooks/useCollege';
-import { useDebouncedValue } from '@mantine/hooks';
-import { CollegeTable } from './school-management/CollegeTable';
+} from "@mantine/core";
+import { IconPlus, IconSearch, IconAlertCircle } from "@tabler/icons-react";
+import { useColleges } from "../../hooks/useCollege";
+import { useDebouncedValue } from "@mantine/hooks";
+import { CollegeTable } from "./school-management/CollegeTable";
+import CollegeForm from "./CollegeForm";
+import type { College } from "../../types/college";
 
 const SchoolManagement = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(2);
-  
+  const [pageSize, setPageSize] = useState(10);
+  const [formOpened, setFormOpened] = useState(false);
+  const [selectedCollege, setSelectedCollege] = useState<College | null>(null);
+
   // Debounce search query to avoid too many API calls
   const [debouncedSearch] = useDebouncedValue(searchQuery, 500);
 
   // API hooks with parameters
-  const { data: collegeData, isLoading, error, refetch } = useColleges({
+  const {
+    data: collegeData,
+    isLoading,
+    error,
+    refetch,
+  } = useColleges({
     search: debouncedSearch || undefined,
     page: currentPage,
     limit: pageSize,
@@ -50,8 +53,24 @@ const SchoolManagement = () => {
 
   // Memoized event handlers
   const handleAddCollege = useCallback(() => {
-    navigate('/schools/add');
-  }, [navigate]);
+    setSelectedCollege(null);
+    setFormOpened(true);
+  }, []);
+
+  const handleEditCollege = useCallback((college: College) => {
+    setSelectedCollege(college);
+    setFormOpened(true);
+  }, []);
+
+  const handleCloseForm = useCallback(() => {
+    setFormOpened(false);
+    setSelectedCollege(null);
+  }, []);
+
+  const handleFormSuccess = useCallback(() => {
+    refetch();
+    handleCloseForm();
+  }, [refetch]);
 
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
@@ -64,9 +83,12 @@ const SchoolManagement = () => {
     }
   }, []);
 
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.currentTarget.value);
-  }, []);
+  const handleSearchChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(event.currentTarget.value);
+    },
+    []
+  );
 
   return (
     <Stack gap="lg">
@@ -107,10 +129,10 @@ const SchoolManagement = () => {
                   value={pageSize.toString()}
                   onChange={handlePageSizeChange}
                   data={[
-                    { value: '5', label: '5 per page' },
-                    { value: '10', label: '10 per page' },
-                    { value: '25', label: '25 per page' },
-                    { value: '50', label: '50 per page' },
+                    { value: "5", label: "5 per page" },
+                    { value: "10", label: "10 per page" },
+                    { value: "25", label: "25 per page" },
+                    { value: "50", label: "50 per page" },
                   ]}
                   w={120}
                 />
@@ -126,12 +148,21 @@ const SchoolManagement = () => {
           )}
         </Group>
 
-        {/* Separate Table Component - only this will re-render during search */}
+        {/* College Form Modal */}
+        <CollegeForm
+          opened={formOpened}
+          onClose={handleCloseForm}
+          college={selectedCollege}
+          onSuccess={handleFormSuccess}
+        />
+
+        {/* College Table */}
         <CollegeTable
           colleges={colleges}
           isLoading={isLoading}
           searchQuery={searchQuery}
           pageSize={pageSize}
+          onEdit={handleEditCollege}
         />
 
         {/* Pagination */}
@@ -151,4 +182,4 @@ const SchoolManagement = () => {
   );
 };
 
-export default SchoolManagement; 
+export default SchoolManagement;

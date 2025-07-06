@@ -9,9 +9,15 @@ import {
   Title,
   Text,
   Alert,
+  FileInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconAlertCircle, IconBrandInstagram } from '@tabler/icons-react';
+import { 
+  IconAlertCircle, 
+  IconBrandInstagram, 
+  IconUpload, 
+  IconUser 
+} from '@tabler/icons-react';
 import { useCreateCollege, useUpdateCollege } from '../../hooks/useCollege';
 import type { College, CreateCollegeRequest, UpdateCollegeRequest } from '../../types/college';
 
@@ -32,11 +38,15 @@ const CollegeForm = ({ opened, onClose, college, onSuccess }: CollegeFormProps) 
   const form = useForm<CreateCollegeRequest | UpdateCollegeRequest>({
     initialValues: {
       name: '',
+      username: '',
+      file: null as unknown as File,
       instagramBusinessId: '',
       instagramAccessToken: '',
     },
     validate: {
       name: (value: string | undefined) => (!value?.trim() ? 'College name is required' : null),
+      username: (value: string | undefined) => (!value?.trim() ? 'Username is required' : null),
+      file: (value: File | undefined) => (!value && !isEditing ? 'Profile image is required' : null),
       instagramBusinessId: (value: string | undefined) => (!value?.trim() ? 'Instagram Business ID is required' : null),
       instagramAccessToken: (value: string | undefined) => (!value?.trim() ? 'Instagram Access Token is required' : null),
     },
@@ -50,6 +60,7 @@ const CollegeForm = ({ opened, onClose, college, onSuccess }: CollegeFormProps) 
       if (college) {
         form.setValues({
           name: college.name || '',
+          username: college.username || '',
           instagramBusinessId: college.instagramBusinessId || '',
           instagramAccessToken: college.instagramAccessToken || '',
         });
@@ -105,7 +116,7 @@ const CollegeForm = ({ opened, onClose, college, onSuccess }: CollegeFormProps) 
       <LoadingOverlay visible={isLoading} />
       
       <form onSubmit={form.onSubmit(handleSubmit)}>
-      <Stack gap="md">
+        <Stack gap="md">
           <Text size="sm" c="dimmed">
             Set up Instagram integration for the college by providing the required credentials.
           </Text>
@@ -127,6 +138,23 @@ const CollegeForm = ({ opened, onClose, college, onSuccess }: CollegeFormProps) 
             placeholder="Enter college name"
             required
             {...form.getInputProps('name')}
+          />
+
+          <TextInput
+            label="Username"
+            placeholder="Enter username"
+            leftSection={<IconUser size={16} />}
+            required
+            {...form.getInputProps('username')}
+          />
+
+          <FileInput
+            label="Profile Image"
+            placeholder={isEditing ? "Upload new image" : "Upload profile image"}
+            accept="image/*"
+            leftSection={<IconUpload size={16} />}
+            required={!isEditing}
+            {...form.getInputProps('file')}
           />
 
           <TextInput
@@ -163,7 +191,7 @@ const CollegeForm = ({ opened, onClose, college, onSuccess }: CollegeFormProps) 
             </Button>
           </Group>
         </Stack>
-        </form>
+      </form>
     </Modal>
   );
 };

@@ -19,14 +19,14 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(TOKEN_KEY);
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Add request timestamp for debugging
     config.metadata = { startTime: new Date() };
-    
+
     return config;
   },
   (error: AxiosError) => {
@@ -43,44 +43,44 @@ apiClient.interceptors.response.use(
       const duration = endTime.getTime() - response.config.metadata.startTime.getTime();
       console.log(`API Response: ${response.config.url} - ${duration}ms`);
     }
-    
+
     // Automatically extract .data from response for all API calls
     // This allows services to directly use the response without accessing .data
     if (response.data && typeof response.data === 'object') {
       return response.data;
     }
-    
+
     return response;
   },
   async (error: AxiosError) => {
     const originalRequest = error.config;
-    
+
     // Handle 401 errors (unauthorized) - redirect to login since no refresh token
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       // No refresh token available, clear tokens and redirect to login
       clearAuthTokens();
       window.location.href = '/login';
     }
-    
+
     // Transform error to our API error format
-    const errorData = error.response?.data as { 
-      message?: string; 
+    const errorData = error.response?.data as {
+      message?: string;
       statusCode?: number;
       timestamp?: string;
       path?: string;
-      errors?: Record<string, string[]>; 
-      code?: string; 
+      errors?: Record<string, string[]>;
+      code?: string;
     } | undefined;
-    
+
     const apiError: ApiError = {
       success: false,
       message: errorData?.message || error.message || 'An unexpected error occurred',
       errors: errorData?.errors,
       code: errorData?.code || error.code,
     };
-    
+
     return Promise.reject(apiError);
   }
 );
@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
 // Token management utilities
 export const setAuthTokens = (token: string, rememberMe = false) => {
   localStorage.setItem(TOKEN_KEY, token);
-  
+
   // Store remember me preference for future use if needed
   if (rememberMe) {
     localStorage.setItem('remember_me', 'true');
@@ -121,7 +121,7 @@ declare module 'axios' {
     };
     _retry?: boolean;
   }
-  
+
   // Override response type to reflect interceptor modification
   // Now responses return data directly instead of AxiosResponse
   interface AxiosInstance {

@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback } from "react";
 import {
   Table,
   Group,
@@ -9,31 +8,42 @@ import {
   Avatar,
   Skeleton,
   Tooltip,
-} from '@mantine/core';
+} from "@mantine/core";
 import {
   IconTrash,
   IconEdit,
   IconBrandInstagram,
   IconEye,
   IconEyeOff,
-} from '@tabler/icons-react';
-import { useDeleteCollege } from '../../../hooks/useCollege';
-import type { College } from '../../../types/college';
+} from "@tabler/icons-react";
+import { useDeleteCollege } from "../../../hooks/useCollege";
+import type { College } from "../../../types/college";
 
 interface CollegeTableProps {
   colleges: College[];
   isLoading: boolean;
   searchQuery: string;
   pageSize: number;
+  onEdit: (college: College) => void;
 }
 
-export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: CollegeTableProps) => {
-  const navigate = useNavigate();
+export const CollegeTable = ({
+  colleges,
+  isLoading,
+  searchQuery,
+  pageSize,
+  onEdit,
+}: CollegeTableProps) => {
   const deleteMutation = useDeleteCollege();
 
   // Helper functions
   const getInitials = useCallback((name: string) => {
-    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   }, []);
 
   const hasInstagramSetup = useCallback((college: College) => {
@@ -41,24 +51,27 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
   }, []);
 
   const formatDate = useCallback((dateString?: string) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString();
   }, []);
 
   // Event handlers
-  const handleEditCollege = useCallback((college: College) => {
-    navigate(`/schools/edit/${college._id}`);
-  }, [navigate]);
-
-  const handleDeleteCollege = useCallback(async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this college? This action cannot be undone.')) {
-      try {
-        await deleteMutation.mutateAsync(id);
-      } catch (error) {
-        console.error('Error deleting college:', error);
+  const handleDeleteCollege = useCallback(
+    async (id: string) => {
+      if (
+        window.confirm(
+          "Are you sure you want to delete this college? This action cannot be undone."
+        )
+      ) {
+        try {
+          await deleteMutation.mutateAsync(id);
+        } catch (error) {
+          console.error("Error deleting college:", error);
+        }
       }
-    }
-  }, [deleteMutation]);
+    },
+    [deleteMutation]
+  );
 
   // Skeleton Component
   const TableSkeleton = () => (
@@ -108,31 +121,38 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
   }
 
   // Filter colleges based on search
-  const filteredColleges = colleges.filter(college =>
-    college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    college.instagramBusinessId?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredColleges = colleges.filter(
+    (college) =>
+      college.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      college.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      college.instagramBusinessId
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   // Table rows
   const rows = filteredColleges.map((college) => (
     <Table.Tr key={college._id}>
-      <Table.Td>  
+      <Table.Td>
         <Group gap="sm">
-          <Avatar 
-            size={40} 
-            radius="xl" 
+          <Avatar
+            size={40}
+            radius="xl"
             color="blue"
+            src={college.logoUrl}
             variant="filled"
           >
             {getInitials(college.name)}
           </Avatar>
           <div>
             <Text fw={500}>{college.name}</Text>
-            <Text size="xs" c="dimmed">ID: {college._id}</Text>
+            <Text size="xs" c="dimmed">
+              @{college.username}
+            </Text>
           </div>
         </Group>
       </Table.Td>
-      
+
       <Table.Td>
         <Group gap="xs">
           <Text size="sm" ff="monospace">
@@ -143,21 +163,21 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
           </Tooltip>
         </Group>
       </Table.Td>
-      
+
       <Table.Td>
         <Group gap="xs">
           {hasInstagramSetup(college) ? (
-            <Badge 
-              leftSection={<IconEye size={12} />} 
-              color="green" 
+            <Badge
+              leftSection={<IconEye size={12} />}
+              color="green"
               variant="light"
             >
               Configured
             </Badge>
           ) : (
-            <Badge 
-              leftSection={<IconEyeOff size={12} />} 
-              color="red" 
+            <Badge
+              leftSection={<IconEyeOff size={12} />}
+              color="red"
               variant="light"
             >
               Incomplete
@@ -165,33 +185,33 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
           )}
         </Group>
       </Table.Td>
-      
+
       <Table.Td>
         <Text size="sm">{formatDate(college.createdAt)}</Text>
       </Table.Td>
-      
+
       <Table.Td>
         <Group gap="xs">
           <Tooltip label="Edit College">
-            <ActionIcon 
-              variant="subtle" 
-              color="blue" 
-              onClick={() => handleEditCollege(college)}
+            <ActionIcon
+              variant="subtle"
+              color="blue"
+              onClick={() => onEdit(college)}
             >
-            <IconEdit size={16} />
-          </ActionIcon>
+              <IconEdit size={16} />
+            </ActionIcon>
           </Tooltip>
-          
+
           <Tooltip label="Delete College">
-          <ActionIcon 
-            variant="subtle" 
-            color="red" 
-            onClick={() => handleDeleteCollege(college._id!)}
-            loading={deleteMutation.isPending}
+            <ActionIcon
+              variant="subtle"
+              color="red"
+              onClick={() => handleDeleteCollege(college._id!)}
+              loading={deleteMutation.isPending}
               disabled={deleteMutation.isPending}
-          >
-            <IconTrash size={16} />
-          </ActionIcon>
+            >
+              <IconTrash size={16} />
+            </ActionIcon>
           </Tooltip>
         </Group>
       </Table.Td>
@@ -200,27 +220,29 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
 
   // Empty state
   if (filteredColleges.length === 0) {
-  return (
+    return (
       <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>College</Table.Th>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>College</Table.Th>
             <Table.Th>Instagram Business ID</Table.Th>
             <Table.Th>Integration Status</Table.Th>
             <Table.Th>Created</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-              <Table.Tr>
+            <Table.Th>Actions</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          <Table.Tr>
             <Table.Td colSpan={5}>
-                  <Text ta="center" py="xl" c="dimmed">
-                {searchQuery ? 'No colleges found matching your search.' : 'No colleges found. Create your first college to get started.'}
-                  </Text>
-                </Table.Td>
-              </Table.Tr>
-          </Table.Tbody>
-        </Table>
+              <Text ta="center" py="xl" c="dimmed">
+                {searchQuery
+                  ? "No colleges found matching your search."
+                  : "No colleges found. Create your first college to get started."}
+              </Text>
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tbody>
+      </Table>
     );
   }
 
@@ -238,4 +260,4 @@ export const CollegeTable = ({ colleges, isLoading, searchQuery, pageSize }: Col
       <Table.Tbody>{rows}</Table.Tbody>
     </Table>
   );
-}; 
+};

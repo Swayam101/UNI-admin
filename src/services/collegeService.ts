@@ -25,9 +25,21 @@ const COLLEGE_ENDPOINTS = {
 export const collegeService = {
   // Create a new college
   createCollege: async (data: CreateCollegeRequest): Promise<College> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('username', data.username);
+    formData.append('file', data.file);
+    formData.append('instagramBusinessId', data.instagramBusinessId);
+    formData.append('instagramAccessToken', data.instagramAccessToken);
+
     const response = await apiClient.post<CollegeDetailResponse>(
       COLLEGE_ENDPOINTS.CREATE,
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data;
   },
@@ -64,9 +76,32 @@ export const collegeService = {
 
   // Update college by ID
   updateCollegeById: async (id: string, data: UpdateCollegeRequest): Promise<College> => {
+    const formData = new FormData();
+    
+    if (data.name) {
+      formData.append('name', data.name);
+    }
+    if (data.username) {
+      formData.append('username', data.username);
+    }
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+    if (data.instagramBusinessId) {
+      formData.append('instagramBusinessId', data.instagramBusinessId);
+    }
+    if (data.instagramAccessToken) {
+      formData.append('instagramAccessToken', data.instagramAccessToken);
+    }
+
     const response = await apiClient.put<CollegeDetailResponse>(
       COLLEGE_ENDPOINTS.UPDATE_BY_ID(id),
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return response.data;
   },

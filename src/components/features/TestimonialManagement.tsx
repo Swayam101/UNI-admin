@@ -28,8 +28,8 @@ import {
   IconTrash,
   IconSearch,
   IconPlus,
-  
   IconUpload,
+  IconEdit,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { useForm } from '@mantine/form';
@@ -38,13 +38,19 @@ import { notifications } from '@mantine/notifications';
 import { 
   useTestimonials, 
   useCreateTestimonial, 
-  useDeleteTestimonial 
+  useDeleteTestimonial,
+  useEditTestimonial
 } from '../../hooks/useTestimonial';
-import type { Testimonial, CreateTestimonialRequest } from '../../types/testimonial';
+import type { 
+  Testimonial, 
+  CreateTestimonialRequest,
+  EditTestimonialRequest 
+} from '../../types/testimonial';
 
 const TestimonialManagement = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [createOpened, { open: openCreate, close: closeCreate }] = useDisclosure(false);
+  const [editOpened, { open: openEdit, close: closeEdit }] = useDisclosure(false);
   const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -52,6 +58,7 @@ const TestimonialManagement = () => {
   const { data: testimonialData, isLoading, error, refetch } = useTestimonials();
   const createTestimonialMutation = useCreateTestimonial();
   const deleteTestimonialMutation = useDeleteTestimonial();
+  const editTestimonialMutation = useEditTestimonial();
 
   // Extract testimonials array from structured response
   const testimonials = testimonialData?.testimonials || [];
@@ -68,6 +75,15 @@ const TestimonialManagement = () => {
       name: (value) => (!value ? 'Name is required' : null),
       file: (value) => (!value ? 'Profile image is required' : null),
       message: (value) => (!value ? 'Message is required' : null),
+    },
+  });
+
+  // Edit form
+  const editForm = useForm<EditTestimonialRequest>({
+    initialValues: {
+      name: '',
+      file: null as unknown as File,
+      message: '',
     },
   });
 
@@ -166,6 +182,39 @@ const TestimonialManagement = () => {
     }
   };
 
+  const handleEditTestimonial = async (values: EditTestimonialRequest) => {
+    if (!selectedTestimonial?._id) return;
+
+    try {
+      await editTestimonialMutation.mutateAsync({
+        testimonialId: selectedTestimonial._id,
+        data: values
+      });
+      notifications.show({
+        title: 'Success',
+        message: 'Testimonial updated successfully',
+        color: 'green',
+      });
+      editForm.reset();
+      closeEdit();
+    } catch {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to update testimonial. Please try again.',
+        color: 'red',
+      });
+    }
+  };
+
+  const handleOpenEdit = (testimonial: Testimonial) => {
+    setSelectedTestimonial(testimonial);
+    editForm.setValues({
+      name: testimonial.name,
+      message: testimonial.message,
+    });
+    openEdit();
+  };
+
   const filteredTestimonials = testimonials.filter(testimonial => {
     const matchesSearch = testimonial.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          testimonial.message.toLowerCase().includes(searchQuery.toLowerCase());
@@ -218,6 +267,15 @@ const TestimonialManagement = () => {
           <Group gap="xs">
             <ActionIcon variant="subtle" color="blue" onClick={() => handleViewTestimonial(testimonial)}>
               <IconEye size={16} />
+            </ActionIcon>
+            <ActionIcon 
+              variant="subtle" 
+              color="green" 
+              onClick={() => handleOpenEdit(testimonial)}
+              loading={editTestimonialMutation.isPending && selectedTestimonial?._id === testimonial._id}
+              disabled={editTestimonialMutation.isPending}
+            >
+              <IconEdit size={16} />
             </ActionIcon>
             <ActionIcon 
               variant="subtle" 
@@ -392,6 +450,49 @@ const TestimonialManagement = () => {
                 disabled={createTestimonialMutation.isPending}
               >
                 Create
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal 
+        opened={editOpened} 
+        onClose={closeEdit} 
+        title="Edit Testimonial"
+        size="lg"
+      >
+        <form onSubmit={editForm.onSubmit(handleEditTestimonial)}>
+          <Stack gap="md">
+            <TextInput
+              label="Name"
+              placeholder="Enter name"
+              {...editForm.getInputProps('name')}
+            />
+            
+            <FileInput
+              label="Profile Image"
+              placeholder="Upload new image"
+              accept="image/*"
+              {...editForm.getInputProps('file')}
+              leftSection={<IconUpload size={16} />}
+            />
+            
+            <Textarea
+              label="Message"
+              placeholder="Enter testimonial message"
+              minRows={4}
+              {...editForm.getInputProps('message')}
+            />
+
+            <Group justify="flex-end" mt="md">
+              <Button variant="light" onClick={closeEdit}>Cancel</Button>
+              <Button 
+                type="submit" 
+                loading={editTestimonialMutation.isPending}
+              >
+                Save Changes
               </Button>
             </Group>
           </Stack>

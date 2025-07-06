@@ -7,7 +7,8 @@ import {
 import { testimonialService } from '../services/testimonialService';
 import type { 
   Testimonial, 
-  CreateTestimonialRequest
+  CreateTestimonialRequest,
+  EditTestimonialRequest
 } from '../types/testimonial';
 
 interface UseTestimonialsParams {
@@ -47,6 +48,28 @@ export const useCreateTestimonial = (): UseMutationResult<Testimonial, Error, Cr
     },
     onError: (error) => {
       console.error('Error creating testimonial:', error);
+    },
+  });
+};
+
+interface EditTestimonialMutationVariables {
+  testimonialId: string;
+  data: EditTestimonialRequest;
+}
+
+export const useEditTestimonial = (): UseMutationResult<Testimonial, Error, EditTestimonialMutationVariables> => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ testimonialId, data }) => testimonialService.editTestimonial(testimonialId, data),
+    onSuccess: (data) => {
+      // Invalidate and refetch testimonials list
+      queryClient.invalidateQueries({ queryKey: TESTIMONIAL_QUERY_KEYS.lists() });
+      
+      console.log('Testimonial updated successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error updating testimonial:', error);
     },
   });
 };

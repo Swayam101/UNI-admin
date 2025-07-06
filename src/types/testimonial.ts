@@ -16,6 +16,12 @@ export interface CreateTestimonialRequest {
   message: string;
 }
 
+export interface EditTestimonialRequest {
+  name?: string;
+  file?: File;
+  message?: string;
+}
+
 export type TestimonialResponse = ApiResponse<Testimonial | Testimonial[]>;
 
 export type TestimonialListResponse = ApiResponse<{

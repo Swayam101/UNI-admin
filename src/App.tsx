@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // Updated imports using the new structure
 import { ThemeProvider } from "./context/ThemeContext";
-import { ErrorBoundary, ErrorTester } from "./components/common";
+import { ErrorBoundary } from "./components/common";
 import { queryClient } from "./lib/queryClient";
 import { AppRoutes } from "./routes";
 
@@ -19,7 +19,7 @@ const App = () => {
           <Notifications />
           <BrowserRouter>
             <AppRoutes />
-            <ErrorTester />
+            {/* <ErrorTester /> */}
           </BrowserRouter>
           {/* React Query DevTools - only in development */}
           {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}

@@ -2,6 +2,7 @@ import apiClient from '../lib/api';
 import type { 
   Testimonial, 
   CreateTestimonialRequest,
+  EditTestimonialRequest,
   TestimonialListResponse,
   TestimonialDetailResponse
 } from '../types/testimonial';
@@ -16,6 +17,7 @@ const TESTIMONIAL_ENDPOINTS = {
   CREATE: '/testimonials',
   GET_ALL: '/testimonials',
   DELETE: '/testimonials',
+  EDIT: '/testimonials',
 } as const;
 
 export const testimonialService = {
@@ -63,5 +65,31 @@ export const testimonialService = {
   // Delete a testimonial
   deleteTestimonial: async (testimonialId: string): Promise<void> => {
     await apiClient.delete(`${TESTIMONIAL_ENDPOINTS.DELETE}/${testimonialId}`);
+  },
+
+  // Edit a testimonial
+  editTestimonial: async (testimonialId: string, data: EditTestimonialRequest): Promise<Testimonial> => {
+    const formData = new FormData();
+    
+    if (data.name) {
+      formData.append('name', data.name);
+    }
+    if (data.file) {
+      formData.append('file', data.file);
+    }
+    if (data.message) {
+      formData.append('message', data.message);
+    }
+
+    const response = await apiClient.patch<TestimonialDetailResponse>(
+      `${TESTIMONIAL_ENDPOINTS.EDIT}/${testimonialId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
   },
 }; 

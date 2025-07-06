@@ -1,20 +1,27 @@
 export interface College {
   _id?: string;
   name: string;
+  username: string;
+  profileImage: string;
   instagramBusinessId: string;
   instagramAccessToken: string;
+  logoUrl: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateCollegeRequest {
   name: string;
+  username: string;
+  file: File;
   instagramBusinessId: string;
   instagramAccessToken: string;
 }
 
 export interface UpdateCollegeRequest {
   name?: string;
+  username?: string;
+  file?: File;
   instagramBusinessId?: string;
   instagramAccessToken?: string;
 }
